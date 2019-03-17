@@ -20,7 +20,7 @@ n.gain  = 5;        % # gains per fly
 %---------------------------------------------------------------------------------------------------------------------------------
 WG = [5 15 25]; % wing gains
 HG = [0]; % head gains
-Gain = combvec(WG,HG)'; % all gain combinations
+Gain = combvec(unique(WG),unique(HG))'; % all gain combinations
 Gain_rand = Gain(randperm(size(Gain,1)),:); % reshuffle randomly
 Gain_all = repmat(Gain_rand,n.rep,1); % repeat for n.rep
 n.trial = length(Gain_all);
