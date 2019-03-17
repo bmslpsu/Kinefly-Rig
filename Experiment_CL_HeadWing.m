@@ -59,12 +59,14 @@ for kk = 1:n.trial
 	Panel_com('set_position',[1, 4]); pause(n_pause)                % set starting position (xpos,ypos)
 	Panel_com('set_mode',[1,0]); pause(n_pause)                     % closed loop tracking (NOTE: 0=open, 1=closed)
 	Panel_com('send_gain_bias',[-10,0,0,0]); pause(n_pause)         % [xgain,xoffset,ygain,yoffset]
+    
     [status,~] = system(['export LD_LIBRARY_PATH="LD_path";' ... % start recording
         'roslaunch Kinelfy record.launch prefix:=' filename ' & echo $!']);
     if status~=0
         error('Record did not launch')
     end
     pause(1)
+    
     % Start experiment
     Panel_com('start');                                         % start closed-loop
     pause(n.exp)                                                % experiment time
