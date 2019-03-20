@@ -1,11 +1,15 @@
 function [Vid,VidTime,FlyState,AI,FILES] = GetBag(root,varargin)
 %% GetBag: Parses file name data and returns tables with relevant information
 %   INPUTS:
-%       root    :   root directory containg .bag files
+%       root        :   root directory containg .bag files >>> files will be saved in a folder titled "mat"
+%       inside this directory
 %   OUTPUTS:
-%       BAG     :   structure containing pared data
+%       Vid         :   raw video data
+%       VidTime     :   raw video time
+%       FlyState  	:   fly kinematic data
+%       AI          :   analog input voltages
+%       FILES    	:   filename listing
 %---------------------------------------------------------------------------------------------------------------------------------
-% clear ; clc
 % root = 'Q:\Box Sync\Research\bags\TEST';
 %---------------------------------------------------------------------------------------------------------------------------------
 % Set name of the output file as the root directory
