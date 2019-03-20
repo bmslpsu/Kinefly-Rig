@@ -68,7 +68,7 @@ for kk = 1:n.Files
     FlyState{kk}(:,1) = Time{kk,2} - syncTime; % flystate time
     AI{kk}(:,1) = Time{kk,3} - syncTime; % AI time
     
-    % Store relevant message in cells
+    % Store relevant messages in cells
     for jj = 1:n.AState % most states in AI
         AI{kk}(jj,2:4) = Msg{kk,3}{jj}.Voltages; % AI voltage
         if jj<=n.Frame
