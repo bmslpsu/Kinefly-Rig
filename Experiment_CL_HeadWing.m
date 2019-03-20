@@ -4,92 +4,128 @@ function [] = Experiment_CL_HeadWing(Fn)
 %   INPUT:
 %       Fn      : fly #
 %---------------------------------------------------------------------------------------------------------------------------------
+% rootdir = '/home/jean-michel/bagfiles/Experiment_Wing_CL/'
+% Fn = 1;
+%---------------------------------------------------------------------------------------------------------------------------------
 %% Set directories & experimental paramters %%
 %---------------------------------------------------------------------------------------------------------------------------------
-% add controller functions to path
-% set ROS directories
-rootdir = 'E:\bagfiles\Experiment_';
-system(sprintf('export rootdir=%s',rootdir))
+addpath(genpath('/home/jean-michel/Documents/MATLAB/MatlabCodes')) % add controller functions to path
+roscmd = 'export LD_LIBRARY_PATH="/home/jean-michel/catkin/devel/lib:/opt/ros/kinetic/lib:/opt/ros/kinetic/lib/x86_64-linux-gnu";';
+
 % EXPERIMENTAL PARAMETERS
-n.exp   = 11;       % experiment time [s]
+n.exp   = 20 + 2;   % experiment time [s] (add 2 second buffer)
 n.rest  = 5;     	% rest time [s]
 n.pause = 0.2;  	% pause between panel commands [s]
 n.rep   = 5;        % # of repetitions per fly
-n.gain  = 5;        % # gains per fly
+
 %% Set Experimental Gain Sequence %%
 %---------------------------------------------------------------------------------------------------------------------------------
-WG = [5 15 25]; % wing gains
-HG = [0]; % head gains
-Gain = combvec(unique(WG),unique(HG))'; % all gain combinations
+WG = unique([1 2.5 4 5.5]); % wing gains
+HG = unique([0]); % head gains
+Gain = nan(length(WG)*length((HG)),2);
+pp = 1;
+for kk = 1:length(WG)
+    for jj = 1:length(HG)
+        Gain(pp,1) = WG(kk);
+        Gain(pp,2) = HG(jj);
+        pp = pp + 1;
+    end
+end
 Gain_rand = Gain(randperm(size(Gain,1)),:); % reshuffle randomly
 Gain_all = repmat(Gain_rand,n.rep,1); % repeat for n.rep
 n.trial = length(Gain_all);
+
 %% EXPERIMENT LOOP %%
 %---------------------------------------------------------------------------------------------------------------------------------
-for kk = 1:n.trial      
-    disp('Trial')
-    disp(num2str(kk)); % print counter to command line
-    WGain = Gain_all(kk,1);
+[~,~] = system('killall -9 rosmaster'); % kill rosmaster
+tic
+fprintf('Begin Experiment \n \n')
+for kk = 1:n.trial
+    % Set gains & filename
+	WGain = Gain_all(kk,1);
 	HGain = Gain_all(kk,2);
-	filename = sprintf('%s_%i_%s_%i_%s_%i_%s_%i','fly',Fn,'trial',kk,'HGain',HGain,'WGain',WGain); % filename
-	system(sprintf('export WGAIN=%f', WGain)) % set wing gain
-	system(sprintf('export HGAIN=%f', HGain)) % set head gain
-	[status,~] = system(['export LD_LIBRARY_PATH="LD_path";' ... % start Kinefly with set AO parameters
-        'roslaunch Kinelfy main.launch' '& echo $!']);
+  	filename = sprintf('%s_%i_%s_%i_%s_%i_%s_%i','fly',Fn,'trial',kk,'HGain',HGain,'WGain',WGain);
+    
+    % Print counter to command line
+    disp(['Trial ' num2str(kk) ': ' filename ]) 
+    disp('-------------------------------------------------------')
+    
+    % Start Kinefly with set AO parameters
+	[status,~] = system([roscmd 'roslaunch Kinefly main_GAIN.launch WGain:=' num2str(WGain) ' HGain:=' num2str(HGain) ' & echo $!']);
     if status~=0
         error('Kinefly did not launch')
+    else
+        disp('Kinefly: initialized')
     end
-    %-----------------------------------------------------------------------------------------------------------------------------
-    % Sinusoid function between closed-loop experiments
-	disp('rest');
-	Panel_com('stop');                                              % stop
-    Panel_com('set_pattern_id', 1); pause(n_pause)                	% set pattern
-    Panel_com('set_position',[15, 1]); pause(n_pause)               % set starting position (xpos,ypos)
-    Panel_com('set_posfunc_id',[1, 0]); pause(n_pause)            	% arg1 = channel (x=1,y=2); arg2 = funcid
-	Panel_com('set_funcX_freq', 50); pause(n_pause)                 % 50Hz update rate for x-channel
-    Panel_com('set_mode', [3,0]); pause(n_pause)                    % 0=open,1=closed,2=fgen,3=vmode,4=pmode
-	Panel_com('start') 	% start stimulus
-	pause(2)
-	Panel_com('stop')  	% stop stimulus
+    
+    % Rest for 5 seconds while opening Kinefly
+    CL_X(5)
+    
 	%-----------------------------------------------------------------------------------------------------------------------------
     % Closed-loop trial
-    disp(['Closed-loop Trial ' num2str(kk)])
-	Panel_com('stop'); pause(n_pause)
-	Panel_com('set_pattern_id', 1);pause(n_pause)                   % set output to p_rest_pat (Pattern_Fourier_bar_barwidth=8)
-	Panel_com('set_position',[1, 4]); pause(n_pause)                % set starting position (xpos,ypos)
-	Panel_com('set_mode',[1,0]); pause(n_pause)                     % closed loop tracking (NOTE: 0=open, 1=closed)
-	Panel_com('send_gain_bias',[-10,0,0,0]); pause(n_pause)         % [xgain,xoffset,ygain,yoffset]
+    disp('Closed-loop experiment:')
+	Panel_com('stop'); pause(n.pause)
+	Panel_com('set_pattern_id', 3);pause(n.pause)                   % set output to p_rest_pat (Pattern_Fourier_bar_barwidth=8)
+	Panel_com('set_position',[1, 4]); pause(n.pause)                % set starting position (xpos,ypos)
+	Panel_com('set_mode',[1,0]); pause(n.pause)                     % closed loop tracking (NOTE: 0=open, 1=closed)
+	Panel_com('send_gain_bias',[-80,0,0,0]); pause(n.pause)         % [xgain,xoffset,ygain,yoffset]
     
-    [status,~] = system(['export LD_LIBRARY_PATH="LD_path";' ... % start recording
-        'roslaunch Kinelfy record.launch prefix:=' filename ' & echo $!']);
+    [status,~] = system([roscmd 'roslaunch Kinefly record.launch prefix:=' filename ' time:=' num2str(n.exp) ' & echo $!']);
     if status~=0
         error('Record did not launch')
+    else
+        disp('Recording...')
     end
-    pause(1)
     
-    % Start experiment
-    Panel_com('start');                                         % start closed-loop
-    pause(n.exp)                                                % experiment time
-    Panel_com('stop');                                          % stop experiment
+    % Run experiment
+    Panel_com('start');     % start closed-loop
+    pause(n.exp)            % experiment time
+    Panel_com('stop');    	% stop experiment
+    
     %-----------------------------------------------------------------------------------------------------------------------------
-	% Sinusoid function between closed-loop experiments while waiting to save .bag file
-	disp('rest');
-	Panel_com('stop');                                              % stop
-    Panel_com('set_pattern_id', 1); pause(n_pause)                	% set pattern
-    Panel_com('set_position',[15, 1]); pause(n_pause)               % set starting position (xpos,ypos)
-    Panel_com('set_posfunc_id',[1, 0]); pause(n_pause)            	% arg1 = channel (x=1,y=2); arg2 = funcid
-	Panel_com('set_funcX_freq', 50); pause(n_pause)                 % 50Hz update rate for x-channel
-    Panel_com('set_mode', [3,0]); pause(n_pause)                    % 0=open,1=closed,2=fgen,3=vmode,4=pmode
-	Panel_com('start') 	% start stimulus
-    pause(10)
-	Panel_com('stop')  	% stop stimulus
-    %-----------------------------------------------------------------------------------------------------------------------------
-	[status,~] = system(['export LD_LIBRARY_PATH="LD_path";' ... % exit Kinefly
-        'rostopic pub -1 kinefly/command Kinefly/MsgCommand commandtext exi' '& echo $!']);
+	% Rest while saving .bag file
+	disp('Saving...');
+    CL_X(n.exp/2) % wait for .bag to save
+    
+  	% Kill everything
+    [~,~] = system([roscmd 'rostopic pub -1 kinefly/command std_msgs/String exit' '& echo $']); % exit Kinefly
+    [status,~] = system('killall -9 rosmaster'); % kill rosmaster
+
     if status~=0
         error('Kinefly did not exit')
+    else
+        fprintf('Kinefly: exit \n \n')
     end
     pause(2)
 end
-disp('Done');
+fprintf('\n Experiment Done');
+toc
 end
+%--------------------------------------------------------------------------------------------------------------------------------
+function [] = CL_X(time)
+    n.pause = 0.2;
+    Panel_com('stop');
+    Panel_com('set_pattern_id', 1); pause(n.pause)
+    Panel_com('set_position',[1, 1]); pause(n.pause)
+    Panel_com('set_mode', [1,0]); pause(n.pause) % 0=open,1=closed,2=fgen,3=vmode,4=pmode
+	Panel_com('send_gain_bias',[-15,0,0,0]); pause(n.pause) % [xgain,xoffset,ygain,yoffset]
+	Panel_com('start')
+    pause(time)
+end
+%--------------------------------------------------------------------------------------------------------------------------------
+function [] = rest(time,rep)
+    n.pause = 0.2;
+    Panel_com('stop');
+    Panel_com('set_pattern_id', 3); pause(n.pause)
+    Panel_com('set_position',[15, 4]); pause(n.pause)
+    Panel_com('set_mode', [0,0]); pause(n.pause) % 0=open,1=closed,2=fgen,3=vmode,4=pmode
+    for kk = 1:rep
+        Panel_com('send_gain_bias',[-30,0,0,0]); pause(n.pause) % [xgain,xoffset,ygain,yoffset]
+        Panel_com('start')
+        pause(time/(rep*2))
+        Panel_com('send_gain_bias',[30,0,0,0]); pause(n.pause)
+        pause(time/(rep*2))
+        Panel_com('stop')
+    end
+end
+%--------------------------------------------------------------------------------------------------------------------------------
