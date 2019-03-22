@@ -87,7 +87,7 @@ for kk = 1:n.Files
     [~,filename,~] = fileparts(FILES{kk}); % get filename
     dateIdx = strfind(filename,'201'); % will work until 2020
     filename = filename(1:dateIdx-2); % remove dat-time at end of filename    
-    save([root '\mat\' filename '.mat'] , 'Vid','VidTime','FlyState','AI' ,'-v7.3')
+    save([PATH '\mat\' filename '.mat'] , 'Vid','VidTime','FlyState','AI' ,'-v7.3')
     waitbar(kk/n.Files,W,'Saving data...');
     
     clear Vid VidTime FlyState AI Time Msg Topic Bag

@@ -92,7 +92,7 @@ end
 
 % Save data
 disp('Saving...')
-save([root '\mat\' filename '.mat'] , 'Vid','VidTime','FlyState','AI','FILES' ,'-v7.3')
+save([PATH '\mat\' filename '.mat'] , 'Vid','VidTime','FlyState','AI','FILES' ,'-v7.3')
 disp('DONE')
 toc
 end
