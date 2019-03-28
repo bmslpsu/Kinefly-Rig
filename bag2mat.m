@@ -1,35 +1,53 @@
-function [Vid,VidTime,FlyState,AI,FILES] = bag2mat(root)
-%% GetBag_Files: Parses file name data and returns tables with relevant information stored in .mat files
+function [Vid,VidTime,FlyState,AI,FILES] = bag2mat(varargin)
+%% bag2mat: Parses file name data and returns tables with relevant information: saves in .mat files
 %   INPUTS:
-%       root        :   root directory containg .bag files >>> files will be saved in a folder titled "mat"
-%       inside this directory
+%       root        :   varargin =root , root directory containg .bag files >>> files will be saved in a folder titled "mat"
+%       inside this directory. If no input is given, will default to current folder.
 %   OUTPUTS:
 %       Vid         :   raw video data
-%       VidTime     :   raw video time
+%       VidTime     :   normalized video time
 %       FlyState  	:   fly kinematic data
 %       AI          :   analog input voltages
 %       FILES    	:   filename listing
 %---------------------------------------------------------------------------------------------------------------------------------
-% root = 'Q:\Box Sync\Research\bags\TEST';
+%   USAGE:
+%       [] = bag2mat()
+%           - opens dialog windows to select files in current folder
+%       [] = bag2mat(root)
+%           - opens dialog windows in user input root folder to select files
 %---------------------------------------------------------------------------------------------------------------------------------
-% Set output directory to store .mat files
-mkdir([root '\mat']) % create directory for export *.mat data
+% root = 'C:\Users\boc5244\Box Sync\Research\bags\TEST';
+%---------------------------------------------------------------------------------------------------------------------------------
+% Allow user to set root directory
+if nargin==0
+    root = '';
+elseif nargin==1
+    root = varargin{1};
+elseif nargin>1
+    error('Too many inputs')
+else
+    error('DEBUG')
+end
 
 % Set directory & get files
-[files, PATH] = uigetfile({'*.bag', 'BAG-files'}, 'Select .bag files', root, 'MultiSelect','on');
-if ischar(files)
-    FILES{1} = files;
-else
-    FILES = files';
-end
-clear files
+[FILES, PATH] = uigetfile({'*.bag', 'BAG-files'}, 'Select .bag files', root, 'MultiSelect','on');
+FILES = cellstr(FILES)'; % if only one file, store in cell
+n.Files = length(FILES); % # of .bag files to parse
 
-n.Files = length(FILES);
+% Set output directory to store .mat files
+matdir = [PATH 'mat']; % export directory to save .mat files
+[status,msg,~] = mkdir(matdir); % create directory for .mat files
+if status
+    warning(msg)
+    disp(['Folder located: ' matdir])
+else
+    error('Directory not created')
+end
 
 % Topic information: [video , flystate, analog in]
-TopicList = {'/camera/image_raw','/kinefly/flystate','/stimulus/ai'};
+TopicList = {'/camera/image_raw','/kinefly/flystate','/stimulus/ai'}';
 TopicType = {'CompressedImage','struct','struct'}';
-n.Topic = length(TopicList);
+n.Topic = length(TopicList); % # of topics in .bag files
 
 W = waitbar(0/n.Files,'Saving data...');
 tic
@@ -37,7 +55,7 @@ for kk = 1:n.Files
     % Get topics, messages, & time
     Bag     = rosbag([PATH FILES{kk}]); % load bag
     Msg     = cell(1,n.Topic); % messages for each topic
-    Time  	= cell(1,n.Topic); % time for flystate & AI
+    Time	= cell(1,n.Topic); % time for flystate & AI
     for jj = 1:n.Topic
         Topic = select(Bag, 'Topic', TopicList{jj}); % get topics
         Msg{jj} = readMessages(Topic,'DataFormat',TopicType{jj}); % get messages
@@ -45,15 +63,15 @@ for kk = 1:n.Files
     end
     
    	% Initialize variables
-    n.Frame         = length(Msg{1}); % # of video frames
-    n.FState        = length(Msg{2}); % # of fly states
-  	n.AState        = length(Msg{3}); % # of AI states
-    n.ACh           = length(Msg{3}{1}.Channels); % # of AI channels
-    FlyState        = nan(n.FState,4); % fly state cell (header: time,head,LW,RW)
-    AI              = nan(n.AState,n.ACh+1); % AI channel cell (header: time,ch0,ch1,ch2)
+    n.Frame  	= length(Msg{1}); % # of video frames
+    n.FState   	= length(Msg{2}); % # of fly states
+  	n.AState  	= length(Msg{3}); % # of AI states
+    n.ACh    	= length(Msg{3}{1}.Channels); % # of AI channels
+    FlyState	= nan(n.FState,6); % fly state cell (header: time,head,LW,RW)
+    AI        	= nan(n.AState,n.ACh+1); % AI channel cell (header: time,ch0,ch1,ch2)
 
- 	InitFrame = readImage(Msg{1}{1});    % first video frame
-    [n.PixelY,n.PixelX] = size(InitFrame);  % size of first video frame
+ 	InitFrame = readImage(Msg{1}{1}); % first video frame
+    [n.PixelY,n.PixelX] = size(InitFrame); % size of first video frame
     Vid = uint8(nan(n.PixelY,n.PixelX,n.Frame)); % video cell
     
     % Sync times
@@ -63,34 +81,51 @@ for kk = 1:n.Files
     AI(:,1)         = Time{3} - syncTime; % AI time
     
     % Store relevant messages in cells
-    for jj = 1:max([n.AState,n.Frame,n.FState]) % cycle through states in AI maximum samples in topics
+    for jj = 1:max([n.AState,n.Frame,n.FState]) % cycle through states
         if jj<=n.AState
-            AI(jj,2:4) = Msg{3}{jj}.Voltages; % AI voltage
+            AI(jj,2:n.ACh+1) = Msg{3}{jj}.Voltages; % AI voltage
         end
         if jj<=n.Frame
             Vid(:,:,jj) = readImage(Msg{1}{jj}); % video frame
         end
         if jj<=n.FState
-            FlyState(jj,2) = Msg{2}{jj}.Head.Angles;    % left wing angle
-            FlyState(jj,3) = Msg{2}{jj}.Left.Angles;    % right wing angle
-            FlyState(jj,4) = Msg{2}{jj}.Right.Angles;   % head angle
+            if ~isempty(Msg{2}{jj}.Head.Angles)
+                FlyState(jj,2) = Msg{2}{jj}.Head.Angles;    % left wing angle
+            end
+            if ~isempty(Msg{2}{jj}.Left.Angles)
+                FlyState(jj,3) = Msg{2}{jj}.Left.Angles;    % right wing angle
+            end
+            if ~isempty(Msg{2}{jj}.Right.Angles)
+                FlyState(jj,4) = Msg{2}{jj}.Right.Angles;   % head angle
+            end
+            if ~isempty(Msg{2}{jj}.Abdomen.Angles)
+                FlyState(jj,5) = Msg{2}{jj}.Abdomen.Angles;	% abdomen angle
+            end
+            if ~isempty(Msg{2}{jj}.Aux.Freq)
+                FlyState(jj,6) = Msg{2}{jj}.Aux.Freq;       % WBF
+            end
         end
     end
     
     % Put data in tables
     FlyState = splitvars(table(FlyState));
-    FlyState.Properties.VariableNames = {'Time','Head','LWing','RWing'};
+    FlyState.Properties.VariableNames = {'Time','Head','LWing','RWing','Abdomen','WBF'}; % fly state variables
 	AI = splitvars(table(AI));
-    AI.Properties.VariableNames = {'Time','Ch0','Ch1','Ch2'};
+    chList = cell(n.ACh+1,1);
+    chList{1} = 'Time';
+    for jj = 1:n.ACh
+       chList{jj+1} = ['Ch' num2str(jj-1)];
+    end
+    AI.Properties.VariableNames = chList; % AI variables
     
     % Save .mat file in directory
     [~,filename,~] = fileparts(FILES{kk}); % get filename
     dateIdx = strfind(filename,'201'); % will work until 2020
-    filename = filename(1:dateIdx-2); % remove dat-time at end of filename    
-    save([PATH '\mat\' filename '.mat'] , 'Vid','VidTime','FlyState','AI' ,'-v7.3')
+    filename = filename(1:dateIdx-2); % remove date-time at end of filename    
+    save([PATH '\mat\' filename '.mat'] , 'Vid','VidTime','FlyState','AI','FILES','-v7.3') % save data to .mat file
     waitbar(kk/n.Files,W,'Saving data...');
     
-    clear Vid VidTime FlyState AI Time Msg Topic Bag
+    clear Vid VidTime FlyState AI Time Msg Topic Bag syncTime
 end
 close(W)
 disp('DONE')
