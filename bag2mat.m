@@ -2,7 +2,7 @@ function [Vid,VidTime,FlyState,AI,FILES] = bag2mat(varargin)
 %% bag2mat: Parses file name data and returns tables with relevant information: saves in .mat files
 %   INPUTS:
 %       root        :   varargin =root , root directory containg .bag files >>> files will be saved in a folder titled "mat"
-%       inside this directory. If no input is given, will default to current folder.
+%                       inside this directory. If no input is given, will default to current folder.
 %   OUTPUTS:
 %       Vid         :   raw video data
 %       VidTime     :   normalized video time
@@ -12,9 +12,9 @@ function [Vid,VidTime,FlyState,AI,FILES] = bag2mat(varargin)
 %---------------------------------------------------------------------------------------------------------------------------------
 %   USAGE:
 %       [] = bag2mat()
-%           - opens dialog windows to select files in current folder
+%           - opens dialog window to select files in current folder
 %       [] = bag2mat(root)
-%           - opens dialog windows in user input root folder to select files
+%           - opens dialog window to select files in user defined root folder 
 %---------------------------------------------------------------------------------------------------------------------------------
 % root = 'C:\Users\boc5244\Box Sync\Research\bags\TEST';
 %---------------------------------------------------------------------------------------------------------------------------------
