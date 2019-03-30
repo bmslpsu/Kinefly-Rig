@@ -66,11 +66,11 @@ for kk = 1:N{1,end} % all trials
  	pat.xpos            = pat.xpos      (span);
  	pat.ypos            = pat.ypos      (span);
 
-    TIME        {I{kk,1}}{I{kk,4},1}{I{kk,3},1}(:,end+1) = fly.time;
-    HEAD.Pos    {I{kk,1}}{I{kk,4},1}{I{kk,3},1}(:,end+1) = fly.head.pos;
-  	WING.Pos    {I{kk,1}}{I{kk,4},1}{I{kk,3},1}(:,end+1) = fly.wing.pos;
-  	PAT.XPos    {I{kk,1}}{I{kk,4},1}{I{kk,3},1}(:,end+1) = pat.xpos ;
-  	PAT.YPos    {I{kk,1}}{I{kk,4},1}{I{kk,3},1}(:,end+1) = pat.ypos;
+    TIME                {I{kk,1}}{I{kk,4},1}{I{kk,3},1}(:,end+1) = fly.time;
+    HEAD.Pos            {I{kk,1}}{I{kk,4},1}{I{kk,3},1}(:,end+1) = fly.head.pos;
+  	WING.Pos            {I{kk,1}}{I{kk,4},1}{I{kk,3},1}(:,end+1) = fly.wing.pos;
+  	PAT.XPos            {I{kk,1}}{I{kk,4},1}{I{kk,3},1}(:,end+1) = pat.xpos ;
+  	PAT.YPos            {I{kk,1}}{I{kk,4},1}{I{kk,3},1}(:,end+1) = pat.ypos;
 end
 %% Plot head position %%
 %---------------------------------------------------------------------------------------------------------------------------------
