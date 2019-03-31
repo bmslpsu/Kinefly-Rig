@@ -6,8 +6,8 @@ function [] = Analyze_Template(rootdir)
 %       -
 %---------------------------------------------------------------------------------------------------------------------------------
 % EXAMPLE INPUT %
-% clear;close all;clc
-% rootdir = 'H:\EXPERIMENTS\Experiment_Wing_CL\mat';
+clear;close all;clc
+rootdir = 'H:\EXPERIMENTS\Experiment_Wing_CL\mat';
 %---------------------------------------------------------------------------------------------------------------------------------
 %% Setup Directories %%
 %---------------------------------------------------------------------------------------------------------------------------------
@@ -44,6 +44,7 @@ for kk = 1:N{1,end} % all trials
     filename = fullfile(PATH,FILES{kk}); % full file name
     load(filename,'FlyState','AI','VidTime') % load in fly kinematics & arena voltages
     
+    vid.time            = VidTime;
     fly.time            = FlyState{:,1};
     fly.Ts              = mean(diff(fly.time));
     fly.Fs              = 1/fly.Ts; 
@@ -57,12 +58,19 @@ for kk = 1:N{1,end} % all trials
     pat.Fs              = 1/pat.Ts;
  	pat.xpos            = AI{:,2};
  	pat.ypos            = AI{:,3};
- 	pat.xpos         	= interp1(pat.time, pat.xpos, fly.time, 'nearest'); % interpolate pattern x-pos to match fly
- 	pat.ypos         	= interp1(pat.time, pat.ypos, fly.time, 'nearest'); % interpolate pattern y-pos to match fly
+    
+	fly.wing.pos    	= interp1(fly.time, fly.wing.pos , vid.time, 'nearest'); % interpolate pattern x-pos to match fly
+ 	fly.head.pos        = interp1(fly.time, fly.head.pos , vid.time, 'nearest'); % interpolate pattern y-pos to match fly
+	fly.wing.vel    	= interp1(fly.time, fly.wing.vel , vid.time, 'nearest'); % interpolate pattern x-pos to match fly
+ 	fly.head.vel        = interp1(fly.time, fly.head.vel , vid.time, 'nearest'); % interpolate pattern y-pos to match fly
+ 	pat.xpos         	= interp1(pat.time, pat.xpos     , vid.time, 'nearest'); % interpolate pattern x-pos to match fly
+ 	pat.ypos         	= interp1(pat.time, pat.ypos  	 , vid.time, 'nearest'); % interpolate pattern y-pos to match fly
  	
     fly.time            = fly.time      (span);
     fly.head.pos        = fly.head.pos  (span);
  	fly.wing.pos        = fly.wing.pos  (span);
+	fly.head.vel        = fly.head.vel  (span);
+ 	fly.wing.vel        = fly.wing.vel  (span);
  	pat.xpos            = pat.xpos      (span);
  	pat.ypos            = pat.ypos      (span);
 
