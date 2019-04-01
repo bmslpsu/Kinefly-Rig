@@ -1,5 +1,5 @@
 %% -------------------------------------------------------------------------------------------------------------------------------
-root = 'C:\Users\boc5244\Box Sync\Research\bags\TEST\mat\';
+root = 'H:\EXPERIMENTS\Experiment_ChirpLog_Walking\mat\';
 
 % Set directory & get files
 [files, PATH] = uigetfile({'*.mat', 'mat-files'}, 'Select .mat files', root, 'MultiSelect','on');
@@ -12,23 +12,27 @@ clear files
 
 n.Files = length(FILES);
 %%
-clc
-
+clc ; close all
+span = 1:6600;
 Fc = 20;
+step = {};
 for kk = 1:n.Files
     load([PATH FILES{kk}],'AI')
-    time = AI{:,1};
+    time = AI{:,1}(span);
     Fs = 1/mean(diff(time));
-	[b,a] = butter(2,Fc/(Fs/2),'low');
-    raw = round((96/5)*AI{:,2});
-    fraw = medfilt1(raw,10);
-%     filtered = filtfilt(b,a,raw);
-%     medfiltered = medfilt1(filtered,10);
-%     panel = round(medfiltered);
+	[b,a] = butter(5,Fc/(Fs/2),'low');
+    step{1}         = (96/5)*AI{:,2}(span);
+  	step{end+1}     = filtfilt(b,a,step{end});
+    step{end+1}     = medfilt1(step{end},10);
+    step{end+1}     = round(step{end});
+    step{end+1}     = medfilt1(step{end},20);
+
     figure (1)
-    subplot(2,2,kk) ; hold on
-    plot(time,raw)
-    plot(time,fraw)
+	hold on ; ylim([18 26])
+    for jj = 1:length(step)
+        clf ; hold on ; ylim([18 26])
+        plot(time,step{jj})        
+    end
     
     
 end

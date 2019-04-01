@@ -6,8 +6,7 @@ function [] = Analyze_Template(rootdir)
 %       -
 %---------------------------------------------------------------------------------------------------------------------------------
 % EXAMPLE INPUT %
-clear;close all;clc
-rootdir = 'H:\EXPERIMENTS\Experiment_Wing_CL\mat';
+% rootdir = 'H:\EXPERIMENTS\Experiment_Wing_CL\mat';
 %---------------------------------------------------------------------------------------------------------------------------------
 %% Setup Directories %%
 %---------------------------------------------------------------------------------------------------------------------------------
@@ -25,7 +24,7 @@ WING.Pos    = cell(N{1,1},1);
 PAT.XPos  	= cell(N{1,1},1);
 PAT.YPos  	= cell(N{1,1},1);
 for kk = 1:N{1,1} % fly
-    for jj = 1:N{1,4} % wing gaim
+    for jj = 1:N{1,4} % wing gain
         for ii = 1:N{1,3} % head gain
             TIME{kk,1}{jj,1}{ii,1}      = [];
             HEAD.Pos{kk,1}{jj,1}{ii,1}  = [];
