@@ -1,7 +1,7 @@
 function [Vid,VidTime,FlyState,AI,FILES] = bag2mat(varargin)
 %% bag2mat: Parses file name data and returns tables with relevant information: saves in .mat files
 %   INPUTS:
-%       root        :   varargin =root , root directory containg .bag files >>> files will be saved in a folder titled "mat"
+%       root        :   varargin=root , root directory containg .bag files >>> files will be saved in a folder titled "mat"
 %                       inside this directory. If no input is given, will default to current folder.
 %   OUTPUTS:
 %       Vid         :   raw video data
@@ -14,16 +14,28 @@ function [Vid,VidTime,FlyState,AI,FILES] = bag2mat(varargin)
 %       [] = bag2mat()
 %           - opens dialog window to select files in current folder
 %       [] = bag2mat(root)
-%           - opens dialog window to select files in user defined root folder 
+%           - opens dialog window to select files in user defined root folder
+%       [] = bag2mat(root,'kinefly')
+%           - for kinefly export RGB video
 %---------------------------------------------------------------------------------------------------------------------------------
 % root = 'C:\Users\boc5244\Box Sync\Research\bags\TEST';
 %---------------------------------------------------------------------------------------------------------------------------------
-% Allow user to set root directory
+% Allow user to set root directory & set video type
+vidFlag = false; % default is raw video
 if nargin==0
     root = '';
 elseif nargin==1
     root = varargin{1};
-elseif nargin>1
+elseif nargin==2
+    root = varargin{1};
+    if strcmp(varargin{2},'raw')
+        vidFlag = false;
+    elseif strcmp(varargin{2},'kinefly') 
+        vidFlag = true;
+    else
+        error('2nd input must be ''raw'' or ''kinefly''')        
+    end
+elseif nargin>2
     error('Too many inputs')
 else
     error('DEBUG')
@@ -45,7 +57,12 @@ else
 end
 
 % Topic information: [video , flystate, analog in]
-TopicList = {'/camera/image_raw','/kinefly/flystate','/stimulus/ai'}';
+if vidFlag
+    TopicList = {'/kinefly/image_output','/kinefly/flystate','/stimulus/ai'}';
+else
+    TopicList = {'/camera/image_raw','/kinefly/flystate','/stimulus/ai'}';
+end
+
 TopicType = {'CompressedImage','struct','struct'}';
 n.Topic = length(TopicList); % # of topics in .bag files
 
@@ -71,8 +88,8 @@ for kk = 1:n.Files
     AI        	= nan(n.AState,n.ACh+1); % AI channel cell (header: time,ch0,ch1,ch2)
 
  	InitFrame = readImage(Msg{1}{1}); % first video frame
-    [n.PixelY,n.PixelX] = size(InitFrame); % size of first video frame
-    Vid = uint8(nan(n.PixelY,n.PixelX,n.Frame)); % video cell
+    [n.PixelY,n.PixelX,n.bit] = size(InitFrame); % size of first video frame
+    Vid = uint8(nan(n.PixelY,n.PixelX,n.bit,n.Frame)); % video cell
     
     % Sync times
     syncTime        = Time{1}(1); % sync times to vid frame
@@ -86,7 +103,7 @@ for kk = 1:n.Files
             AI(jj,2:n.ACh+1) = Msg{3}{jj}.Voltages; % AI voltage
         end
         if jj<=n.Frame
-            Vid(:,:,jj) = readImage(Msg{1}{jj}); % video frame
+            Vid(:,:,:,jj) = readImage(Msg{1}{jj}); % video frame
         end
         if jj<=n.FState
             if ~isempty(Msg{2}{jj}.Head.Angles)
