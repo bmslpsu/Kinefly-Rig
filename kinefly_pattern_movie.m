@@ -13,8 +13,8 @@ function [MOV] = kinefly_pattern_movie(rootvid,rootpat,vidFs,export)
 clear ; clc ; close all
 export = true;
 vidFs = 45;
-rootvid = 'H:\MOVIE\Kinefly_Demo\mat\';
-rootpat = 'Q:\Box Sync\Git\Arena\Patterns\';
+rootvid = 'F:\MOVIE\Kinefly_Demo\mat\';
+rootpat = 'C:\BC\Git\Arena\Patterns\';
 %---------------------------------------------------------------------------------------------------------------------------------
 % Set directories
 root.pat    = rootpat; % pattern location
@@ -40,12 +40,12 @@ root.image = [root.vid 'Movie\' dirName]; % image directory
 mkdir(root.image) % create directory for export images
 
 % Get video, pattern, position, & angles data 
-Fly.vid = squeeze(Vid); % raw trial video data
-Fly.time = VidTime; % video time
-Fly.Fs = round(1/mean(diff(Fly.time)));
-[Fly.xP,Fly.yP,Fly.bit,nFrame] = size(Fly.vid ); % get size of video
-center = [round(Fly.yP/2) , round(Fly.xP/2)+45]; % center point for pattern & fly
-radius.center = floor(max([Fly.yP Fly.xP])/1.2); % radius of pattern
+Vid = squeeze(Vid); % raw trial video data
+vid.time = VidTime; % video time
+vid.Fs = round(1/mean(diff(vid.time)));
+[vid.xP,vid.yP,vid.bit,nFrame] = size(Vid ); % get size of video
+center = [round(vid.yP/2) , round(vid.xP/2)+45]; % center point for pattern & fly
+radius.center = floor(max([vid.yP vid.xP])/1.2); % radius of pattern
 radius.width = 10; % radius display width
 rin  = radius.center - radius.width;
 rout = radius.center + radius.width;
@@ -54,24 +54,25 @@ y1 = center(2);
 sA = 3.75 * pi/180; % angle pixel subtends
 Pat.pos = round((96/5)*(AI{:,2})); % pattern position
 Pat.time = AI{:,1}; % pattern time
-Pat.int = interp1(Pat.time, Pat.pos, Fly.time, 'nearest'); % interpolate pattern to match fly video
+Pat.int = interp1(Pat.time, Pat.pos, vid.time, 'nearest'); % interpolate pattern to match fly video
 
 % Create video object
 VID = VideoWriter([root.mov dirName '_pattern.avi'],'Uncompressed AVI');
 VID.FrameRate = vidFs;
 open(VID)
-
+%%
+close all
 FIG = figure ; clf ; hold on % main figure window for display & export
 set(gcf, 'color', 'k');
 set(FIG, 'Renderer','OpenGL');
-set(FIG, 'Position',[100, 100, 1920, 1083]);
+% set(FIG, 'Position',[1, 41, 1920, 1083]);
 movegui(FIG,'center')
 % subplot(12,1,1:8) ; cla ; hold on; axis square % for fly & pattern vid
-% axis([0 Fly.yP 0 Fly.xP])
+% axis([0 vid.yP 0 vid.xP])
 % subplot(12,1,9:10)  ; cla ; hold on ; h1 = animatedline('Color','g','LineWidth',2); % for pattern angle
 % subplot(12,1,11:12) ; cla ; hold on ; h2 = animatedline('Color','c','LineWidth',2); % for head angle
 pp = 1;
-iter = round(Fly.Fs/vidFs);
+iter = round(vid.Fs/vidFs);
 disp('Exporting Video...')
 for jj = 1:iter:nFrame % for each frame    
 	pat = pattern.Pats(1,:,round(Pat.int(jj)),4); % top row of pattern
@@ -81,14 +82,16 @@ for jj = 1:iter:nFrame % for each frame
     theta = (I.*3.75) .* (2*pi/360); % lit pixels
     theta_ALL = deg2rad(3.75*(1:96));
 
-    Frame = Fly.vid(:,:,:,jj); % current raw frame
+    Frame = Vid(:,:,:,jj); % current raw frame
     DISP = Frame; % video frame to display
     axis([-200 700 -300 700])
-%     set(FIG, 'Position',[200, 200, 1920, 1083]);
 
     % Display fly video
 %     subplot(12,1,1:8) ; cla ; hold on ; axis square ; axis on
-    imshow(DISP); hold on
+    cla
+    imshow(DISP) ; hold on
+ 	set(FIG, 'Position',[1, 41, 5*500, 5*300])
+
 %     set(FIG, 'Position',[100, 100, 1920/2, 1083/2]);
 %     plot(x1,y1,'r.','MarkerSize',1) % display center point
 
