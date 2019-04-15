@@ -21,7 +21,7 @@ function [Vid,VidTime,FlyState,AI,FILES] = bag2mat(varargin)
 % root = 'C:\Users\boc5244\Box Sync\Research\bags\TEST';
 %---------------------------------------------------------------------------------------------------------------------------------
 % Allow user to set root directory & set video type
-vidFlag = false; % default is raw video
+version = 0; % default is raw video
 if nargin==0
     root = '';
 elseif nargin==1
@@ -29,9 +29,11 @@ elseif nargin==1
 elseif nargin==2
     root = varargin{1};
     if strcmp(varargin{2},'raw')
-        vidFlag = false;
+        version = 0;
     elseif strcmp(varargin{2},'kinefly') 
-        vidFlag = true;
+        version = 1;
+    elseif strcmp(varargin{2},'retrack') 
+        version = 2;
     else
         error('2nd input must be ''raw'' or ''kinefly''')        
     end
@@ -57,7 +59,7 @@ else
 end
 
 % Topic information: [video , flystate, analog in]
-if vidFlag
+if version
     TopicList = {'/kinefly/image_output','/kinefly/flystate','/stimulus/ai'}';
 else
     TopicList = {'/camera/image_raw','/kinefly/flystate','/stimulus/ai'}';
@@ -82,10 +84,12 @@ for kk = 1:n.Files
    	% Initialize variables
     n.Frame  	= length(Msg{1}); % # of video frames
     n.FState   	= length(Msg{2}); % # of fly states
-  	n.AState  	= length(Msg{3}); % # of AI states
-    n.ACh    	= length(Msg{3}{1}.Channels); % # of AI channels
     FlyState	= nan(n.FState,6); % fly state cell (header: time,head,LW,RW)
-    AI        	= nan(n.AState,n.ACh+1); % AI channel cell (header: time,ch0,ch1,ch2)
+    if ~isempty(Msg{3})
+        n.AState  	= length(Msg{3}); % # of AI states
+        n.ACh    	= length(Msg{3}{1}.Channels); % # of AI channels
+        AI        	= nan(n.AState,n.ACh+1); % AI channel cell (header: time,ch0,ch1,ch2)
+    end
 
  	InitFrame = readImage(Msg{1}{1}); % first video frame
     [n.PixelY,n.PixelX,n.bit] = size(InitFrame); % size of first video frame
@@ -95,12 +99,22 @@ for kk = 1:n.Files
     syncTime        = Time{1}(1); % sync times to vid frame
     VidTime(:,1)    = Time{1} - syncTime; % video time
     FlyState(:,1)   = Time{2} - syncTime; % flystate time
-    AI(:,1)         = Time{3} - syncTime; % AI time
+    if ~isempty(Msg{3})
+        AI(:,1) = Time{3} - syncTime; % AI time
+    end
     
-    % Store relevant messages in cells
-    for jj = 1:max([n.AState,n.Frame,n.FState]) % cycle through states
-        if jj<=n.AState
-            AI(jj,2:n.ACh+1) = Msg{3}{jj}.Voltages; % AI voltage
+    if ~isempty(Msg{3})
+        maxI = max([n.AState,n.Frame,n.FState]);
+    else
+        maxI = max([n.Frame,n.FState]);
+    end
+    
+	% Store messages in cells
+    for jj = 1:maxI % cycle through states
+        if ~isempty(Msg{3})
+            if jj<=n.AState
+                AI(jj,2:n.ACh+1) = Msg{3}{jj}.Voltages; % AI voltage
+            end
         end
         if jj<=n.Frame
             Vid(:,:,:,jj) = readImage(Msg{1}{jj}); % video frame
@@ -127,18 +141,21 @@ for kk = 1:n.Files
     % Put data in tables
     FlyState = splitvars(table(FlyState));
     FlyState.Properties.VariableNames = {'Time','Head','LWing','RWing','Abdomen','WBF'}; % fly state variables
-	AI = splitvars(table(AI));
-    chList = cell(n.ACh+1,1);
-    chList{1} = 'Time';
-    for jj = 1:n.ACh
-       chList{jj+1} = ['Ch' num2str(jj-1)];
+    if ~isempty(Msg{3})
+        AI = splitvars(table(AI));
+        chList = cell(n.ACh+1,1);
+        chList{1} = 'Time';
+        for jj = 1:n.ACh
+           chList{jj+1} = ['Ch' num2str(jj-1)];
+        end
+        AI.Properties.VariableNames = chList; % AI variables
+    else
+        AI = [];
     end
-    AI.Properties.VariableNames = chList; % AI variables
-    
     % Save .mat file in directory
     [~,filename,~] = fileparts(FILES{kk}); % get filename
     dateIdx = strfind(filename,'201'); % will work until 2020
-    filename = filename(1:dateIdx-2); % remove date-time at end of filename    
+    filename = filename(1:dateIdx-2); % remove date-time at end of filename   
     save([PATH '\mat\' filename '.mat'] , 'Vid','VidTime','FlyState','AI','FILES','-v7.3') % save data to .mat file
     waitbar(kk/n.Files,W,'Saving data...');
     
