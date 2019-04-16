@@ -324,7 +324,7 @@ for jj = 1:N{1,4}
     end
 end
 %% Histogram of Pattern Position ALL FLIES 
-figure (6) ; clf ; hold on
+figure (7) ; clf ; hold on
 set(gcf,'Color','w')
 set(gcf,'Name','Histogram of Pattern Position')
 set(gcf,'Position',[0 0 N{1,4}*400 N{1,3}*400])
@@ -360,7 +360,7 @@ for jj = 1:N{1,4}
     end
 end
 %% Histogram of Wing Position ALL FLIES 
-figure (6) ; clf ; hold on
+figure (8) ; clf ; hold on
 set(gcf,'Color','w')
 set(gcf,'Name','Histogram of Pattern Position')
 set(gcf,'Position',[0 0 N{1,4}*400 N{1,3}*400])
@@ -395,4 +395,44 @@ for jj = 1:N{1,4}
         pp = pp + 1;
     end
 end
+%% Box Plot of Head Position
+figure (9) ; clf ; hold on
+set(gcf,'Color','w')
+set(gcf,'Name','Histogram of Head Position')
+set(gcf,'Position',[0 0 N{1,4}*400 N{1,3}*400])
+movegui(gcf,'center')
+vector = -20:1:20;
+pp = 1;
+for jj = 1:N{1,4}
+    for ii = 1:N{1,3}
+        subplot(N{1,3},N{1,4},pp) ; hold on
+            %xlim([0 20])
+            %ylim(120*[-1 1])
+            if any(pp==(1:N{1,4}))
+                title(['Wing Gain = ' num2str(U{1,4}{1}(jj))],'FontSize',12,'fontweight','bold')
+            end
+            if ((pp-1)/N{1,4}) == floor((pp-1)/N{1,4})
+                ylabel({['Head Gain = ' num2str(U{1,3}{1}(ii))],['Head Position(' char(176) ')']},...
+                    'FontSize',13,'fontweight','bold')
+            else
+                yticks(0)
+                yticklabels('')  
+            end
+            if any(pp==(N{1,4}*N{1,3}-N{1,4}+1):(N{1,4}*N{1,3}))
+                xlabel('Pattern Position','FontSize',12,'fontweight','bold')
+            else
+                xticks(0)
+                xticklabels('')
+            end
+
+            pos  = rad2deg(HEAD.All.Pos{jj,ii}); 
+            histogram(pos,vector,'facecolor','k');
+
+        pp = pp + 1;
+    end
+end
+%% Box Plot of Wing Position
+
+%% Box Plot of Pattern Position
+
 end
