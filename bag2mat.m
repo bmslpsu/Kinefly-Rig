@@ -52,7 +52,7 @@ n.Files = length(FILES); % # of .bag files to parse
 matdir = [PATH 'mat']; % export directory to save .mat files
 [status,msg,~] = mkdir(matdir); % create directory for .mat files
 if status
-    warning(msg)
+%     warning(msg)
     disp(['Folder located: ' matdir])
 else
     error('Directory not created')
