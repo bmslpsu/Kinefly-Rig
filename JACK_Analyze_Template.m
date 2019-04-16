@@ -49,25 +49,22 @@ for kk = 1:N{1,end} % all trials
     fly.time            = FlyState{:,1};
     fly.Ts              = mean(diff(fly.time));
     fly.Fs              = 1/fly.Ts; 
-	[b,a]               = butter(2,fly.Fc/(fly.Fs/2),'low'); % 2nd-order low-pass butterworth filter
+	[fly.b,fly.a]    	= butter(2,fly.Fc/(fly.Fs/2),'low'); % 2nd-order low-pass butterworth filter
     fly.head.pos        = filtfilt(b,a,FlyState{:,2});
-  	fly.wing.pos        = filtfilt(b,a,filtfilt(b,a,FlyState{:,3}) - filtfilt(b,a,FlyState{:,4}));
+  	fly.wing.pos        = filtfilt(fly.b,fly.a,filtfilt(fly.b,fly.a,FlyState{:,3}) - filtfilt(fly.b,fly.a,FlyState{:,4}));
 	fly.head.vel        = [diff(fly.head.pos)./fly.Ts ; 0];
 	fly.wing.vel        = [diff(fly.wing.pos)./fly.Ts ; 0];
     pat.time            = AI{:,1};
     pat.Ts              = mean(diff(pat.time));
     pat.Fs              = 1/pat.Ts;
- 	pat.xpos            = (round((AI{:,2})*(96/5)));
- 	pat.ypos            = AI{:,3};
-    
-	fly.wing.pos    	= interp1(fly.time, fly.wing.pos , vid.time, 'nearest'); % interpolate pattern x-pos to match fly
- 	fly.head.pos        = interp1(fly.time, fly.head.pos , vid.time, 'nearest'); % interpolate pattern y-pos to match fly
-	fly.wing.vel    	= interp1(fly.time, fly.wing.vel , vid.time, 'nearest'); % interpolate pattern x-pos to match fly
- 	fly.head.vel        = interp1(fly.time, fly.head.vel , vid.time, 'nearest'); % interpolate pattern y-pos to match fly
- 	pat.xpos         	= interp1(pat.time, pat.xpos     , vid.time, 'nearest'); % interpolate pattern x-pos to match fly
- 	pat.ypos         	= interp1(pat.time, pat.ypos  	 , vid.time, 'nearest'); % interpolate pattern y-pos to match fly
- 	
-    fly.time            = fly.time              (span);
+    pat.Fc              = 30;
+	[pat.b,pat.a]    	= butter(2,pat.Fc/(pat.Fs/2),'low'); % 2nd-order low-pass butterworth filter
+ 	pat.xpos            = 3.75*(round((AI{:,2})*(96/5)));
+    pat.xpos            = FitPanel(pat.xpos,pat.time,vid.time,true);
+    pat.xpos            = medfilt1(pat.xpos,5);
+ 	pat.ypos            = (round((AI{:,3})*(96/5)));
+    	
+    fly.time            = vid.time              (span);
     fly.head.pos        = fly.head.pos          (span);
  	fly.wing.pos        = fly.wing.pos          (span);
 	fly.head.vel        = fly.head.vel          (span);
