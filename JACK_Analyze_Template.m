@@ -20,11 +20,19 @@ FILES = cellstr(FILES)'; % if only one character array >> store in cell
 
 %% Get Data %%
 %---------------------------------------------------------------------------------------------------------------------------------
-TIME        = cell(N{1,1},1);
-HEAD.Pos    = cell(N{1,1},1);
-WING.Pos    = cell(N{1,1},1);
-PAT.XPos  	= cell(N{1,1},1);
-PAT.YPos  	= cell(N{1,1},1);
+TIME            = cell(N{1,1},1);
+HEAD.Pos        = cell(N{1,1},1);
+WING.Pos        = cell(N{1,1},1);
+PAT.XPos        = cell(N{1,1},1);
+PAT.YPos        = cell(N{1,1},1);
+HEAD.All.Pos    = cell(N{1,4},N{1,3});
+WING.All.Pos    = cell(N{1,4},N{1,3});
+PAT.All.XPos    = cell(N{1,4},N{1,3});
+PAT.All.YPos    = cell(N{1,4},N{1,3});
+
+
+
+
 for kk = 1:N{1,1} % fly
     for jj = 1:N{1,4} % wing gain
         for ii = 1:N{1,3} % head gain
@@ -60,7 +68,7 @@ for kk = 1:N{1,end} % all trials
     pat.Fc              = 30;
 	[pat.b,pat.a]    	= butter(2,pat.Fc/(pat.Fs/2),'low'); % 2nd-order low-pass butterworth filter
  	pat.xpos            = 3.75*(round((AI{:,2})*(96/5)));
-    pat.xpos            = FitPanel(pat.xpos,pat.time,vid.time,true);
+    pat.xpos            = FitPanel(pat.xpos,pat.time,vid.time,false); %true does debugging, false does not 
     pat.xpos            = medfilt1(pat.xpos,5);
  	pat.ypos            = (round((AI{:,3})*(96/5)));
     	
@@ -77,6 +85,10 @@ for kk = 1:N{1,end} % all trials
   	WING.Pos            {I{kk,1}}{I{kk,4},1}{I{kk,3},1}(:,end+1) = fly.wing.pos;
   	PAT.XPos            {I{kk,1}}{I{kk,4},1}{I{kk,3},1}(:,end+1) = pat.xpos ;
   	PAT.YPos            {I{kk,1}}{I{kk,4},1}{I{kk,3},1}(:,end+1) = pat.ypos;
+    HEAD.All.Pos        {I{kk,4},I{kk,3}}(:,end+1) = fly.head.pos;
+    WING.All.Pos        {I{kk,4},I{kk,3}}(:,end+1) = fly.wing.pos;
+    PAT.All.XPos        {I{kk,4},I{kk,3}}(:,end+1) = pat.xpos;
+    PAT.All.YPos        {I{kk,4},I{kk,3}}(:,end+1) = pat.ypos;
 end
 %% Plot head position %%
 %---------------------------------------------------------------------------------------------------------------------------------
@@ -157,7 +169,7 @@ for kk = 1:N{1,1}
         end
     end
 end
-%% Histogram of Pannel Position
+%% Histogram of Pattern Position
 figure (3) ; clf ; hold on
 set(gcf,'Color','w')
 set(gcf,'Name','Histogram of Pattern Position')
@@ -190,7 +202,7 @@ for kk = 1:N{1,1}
 
                 time = TIME{kk}{jj}{ii};
                 pos  = (PAT.XPos{kk}{jj}{ii});
-                histogram(pos,vector);
+                histogram(pos);
 
             pp = pp + 1;
         end
@@ -198,7 +210,7 @@ for kk = 1:N{1,1}
 end
 
 %% Histogram of HEAD Position
-figure (3) ; clf ; hold on
+figure (4) ; clf ; hold on
 set(gcf,'Color','w')
 set(gcf,'Name','Histogram of Head Position')
 set(gcf,'Position',[0 0 N{1,4}*400 N{1,3}*400])
@@ -215,7 +227,7 @@ for kk = 1:N{1,1}
                     title(['Wing Gain = ' num2str(U{1,4}{1}(jj))],'FontSize',12,'fontweight','bold')
                 end
                 if ((pp-1)/N{1,4}) == floor((pp-1)/N{1,4})
-                    ylabel({['Head Gain = ' num2str(U{1,3}{1}(ii))],['Wing Position(' char(176) ')']},...
+                    ylabel({['Head Gain = ' num2str(U{1,3}{1}(ii))],['Head Position(' char(176) ')']},...
                         'FontSize',13,'fontweight','bold')
                 else
                     yticks(0)
@@ -237,7 +249,7 @@ for kk = 1:N{1,1}
     end
 end
 %% Histogram of WING Position
-figure (3) ; clf ; hold on
+figure (5) ; clf ; hold on
 set(gcf,'Color','w')
 set(gcf,'Name','Histogram of Wing Position')
 set(gcf,'Position',[0 0 N{1,4}*400 N{1,3}*400])
@@ -274,4 +286,113 @@ for kk = 1:N{1,1}
             pp = pp + 1;
         end
     end
+end
+%% Histogram of Head Position ALL FLIES 
+figure (6) ; clf ; hold on
+set(gcf,'Color','w')
+set(gcf,'Name','Histogram of Head Position')
+set(gcf,'Position',[0 0 N{1,4}*400 N{1,3}*400])
+movegui(gcf,'center')
+vector = -20:1:20;
+pp = 1;
+for jj = 1:N{1,4}
+    for ii = 1:N{1,3}
+        subplot(N{1,3},N{1,4},pp) ; hold on
+            %xlim([0 20])
+            %ylim(120*[-1 1])
+            if any(pp==(1:N{1,4}))
+                title(['Wing Gain = ' num2str(U{1,4}{1}(jj))],'FontSize',12,'fontweight','bold')
+            end
+            if ((pp-1)/N{1,4}) == floor((pp-1)/N{1,4})
+                ylabel({['Head Gain = ' num2str(U{1,3}{1}(ii))],['Head Position(' char(176) ')']},...
+                    'FontSize',13,'fontweight','bold')
+            else
+                yticks(0)
+                yticklabels('')  
+            end
+            if any(pp==(N{1,4}*N{1,3}-N{1,4}+1):(N{1,4}*N{1,3}))
+                xlabel('Pattern Position','FontSize',12,'fontweight','bold')
+            else
+                xticks(0)
+                xticklabels('')
+            end
+
+            pos  = rad2deg(HEAD.All.Pos{jj,ii}); 
+            histogram(pos,vector,'facecolor','k');
+
+        pp = pp + 1;
+    end
+end
+%% Histogram of Pattern Position ALL FLIES 
+figure (6) ; clf ; hold on
+set(gcf,'Color','w')
+set(gcf,'Name','Histogram of Pattern Position')
+set(gcf,'Position',[0 0 N{1,4}*400 N{1,3}*400])
+movegui(gcf,'center')
+vector = -180:1:180;
+pp = 1;
+for jj = 1:N{1,4}
+    for ii = 1:N{1,3}
+        subplot(N{1,3},N{1,4},pp) ; hold on
+            %xlim([0 20])
+            %ylim(120*[-1 1])
+            if any(pp==(1:N{1,4}))
+                title(['Wing Gain = ' num2str(U{1,4}{1}(jj))],'FontSize',12,'fontweight','bold')
+            end
+            if ((pp-1)/N{1,4}) == floor((pp-1)/N{1,4})
+                ylabel({['Head Gain = ' num2str(U{1,3}{1}(ii))],['Pattern Position(' char(176) ')']},...
+                    'FontSize',13,'fontweight','bold')
+            else
+                yticks(0)
+                yticklabels('')  
+            end
+            if any(pp==(N{1,4}*N{1,3}-N{1,4}+1):(N{1,4}*N{1,3}))
+                xlabel('Pattern Position','FontSize',12,'fontweight','bold')
+            else
+                xticks(0)
+                xticklabels('')
+            end
+
+            pos  = (PAT.All.XPos{jj,ii}); 
+            histogram(pos,'facecolor','k');
+
+        pp = pp + 1;
+    end
+end
+%% Histogram of Wing Position ALL FLIES 
+figure (6) ; clf ; hold on
+set(gcf,'Color','w')
+set(gcf,'Name','Histogram of Pattern Position')
+set(gcf,'Position',[0 0 N{1,4}*400 N{1,3}*400])
+movegui(gcf,'center')
+vector = -30:1:30;
+pp = 1;
+for jj = 1:N{1,4}
+    for ii = 1:N{1,3}
+        subplot(N{1,3},N{1,4},pp) ; hold on
+            %xlim([0 20])
+            %ylim(120*[-1 1])
+            if any(pp==(1:N{1,4}))
+                title(['Wing Gain = ' num2str(U{1,4}{1}(jj))],'FontSize',12,'fontweight','bold')
+            end
+            if ((pp-1)/N{1,4}) == floor((pp-1)/N{1,4})
+                ylabel({['Head Gain = ' num2str(U{1,3}{1}(ii))],['Wing Position(' char(176) ')']},...
+                    'FontSize',13,'fontweight','bold')
+            else
+                yticks(0)
+                yticklabels('')  
+            end
+            if any(pp==(N{1,4}*N{1,3}-N{1,4}+1):(N{1,4}*N{1,3}))
+                xlabel('Pattern Position','FontSize',12,'fontweight','bold')
+            else
+                xticks(0)
+                xticklabels('')
+            end
+
+            pos  = rad2deg(WING.All.Pos{jj,ii}); 
+            histogram(pos,vector,'facecolor','k');
+
+        pp = pp + 1;
+    end
+end
 end
