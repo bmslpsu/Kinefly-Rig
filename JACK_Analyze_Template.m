@@ -1,6 +1,4 @@
-function [] = Analyze_Template(rootdir)
-clear
-clc
+function [] = JACK_Analyze_Template(rootdir)
 %% Analyze_Template: Reads in all raw trials, transforms data, and saves in organized structure
 %   INPUTS:
 %       root  	: directory where .mat files are located
@@ -8,7 +6,7 @@ clc
 %       -
 %---------------------------------------------------------------------------------------------------------------------------------
 % EXAMPLE INPUT %
-rootdir = 'F:\EXPERIMENTS\Experiment_Wing_CL\mat';
+% rootdir = 'H:\EXPERIMENTS\Experiment_Wing_CL_WideField\mat\Flies 1-3';
 %---------------------------------------------------------------------------------------------------------------------------------
 %% Setup Directories %%
 %---------------------------------------------------------------------------------------------------------------------------------
@@ -29,18 +27,14 @@ HEAD.All.Pos    = cell(N{1,4},N{1,3});
 WING.All.Pos    = cell(N{1,4},N{1,3});
 PAT.All.XPos    = cell(N{1,4},N{1,3});
 PAT.All.YPos    = cell(N{1,4},N{1,3});
-
-
-
-
 for kk = 1:N{1,1} % fly
     for jj = 1:N{1,4} % wing gain
         for ii = 1:N{1,3} % head gain
-            TIME{kk,1}{jj,1}{ii,1}      = [];
-            HEAD.Pos{kk,1}{jj,1}{ii,1}  = [];
-            WING.Pos{kk,1}{jj,1}{ii,1}  = [];
-            PAT.XPos{kk,1}{jj,1}{ii,1}  = [];
-            PAT.YPos{kk,1}{jj,1}{ii,1}  = [];
+            TIME    {kk,1}{jj,ii} 	= [];
+            HEAD.Pos{kk,1}{jj,ii}  	= [];
+            WING.Pos{kk,1}{jj,ii}   = [];
+            PAT.XPos{kk,1}{jj,ii}   = [];
+            PAT.YPos{kk,1}{jj,ii}   = [];
         end
     end
 end
@@ -67,11 +61,12 @@ for kk = 1:N{1,end} % all trials
     pat.Fs              = 1/pat.Ts;
     pat.Fc              = 30;
 	[pat.b,pat.a]    	= butter(2,pat.Fc/(pat.Fs/2),'low'); % 2nd-order low-pass butterworth filter
+    pat.xpos            = filtfilt(pat.b,pat.a,AI{:,2});
  	pat.xpos            = 3.75*(round((AI{:,2})*(96/5)));
-    pat.xpos            = FitPanel(pat.xpos,pat.time,vid.time,false); %true does debugging, false does not 
+    pat.xpos            = FitPanel(pat.xpos,pat.time,vid.time,false); % true does debugging, false does not 
     pat.xpos            = medfilt1(pat.xpos,5);
  	pat.ypos            = (round((AI{:,3})*(96/5)));
-    	
+	
     fly.time            = vid.time              (span);
     fly.head.pos        = fly.head.pos          (span);
  	fly.wing.pos        = fly.wing.pos          (span);
@@ -80,11 +75,11 @@ for kk = 1:N{1,end} % all trials
  	pat.xpos            = pat.xpos              (span);
  	pat.ypos            = pat.ypos              (span);
 
-    TIME                {I{kk,1}}{I{kk,4},1}{I{kk,3},1}(:,end+1) = fly.time;
-    HEAD.Pos            {I{kk,1}}{I{kk,4},1}{I{kk,3},1}(:,end+1) = fly.head.pos;
-  	WING.Pos            {I{kk,1}}{I{kk,4},1}{I{kk,3},1}(:,end+1) = fly.wing.pos;
-  	PAT.XPos            {I{kk,1}}{I{kk,4},1}{I{kk,3},1}(:,end+1) = pat.xpos ;
-  	PAT.YPos            {I{kk,1}}{I{kk,4},1}{I{kk,3},1}(:,end+1) = pat.ypos;
+    TIME                {I{kk,1}}{I{kk,4},I{kk,3}}(:,end+1) = fly.time;
+    HEAD.Pos            {I{kk,1}}{I{kk,4},I{kk,3}}(:,end+1) = fly.head.pos;
+  	WING.Pos            {I{kk,1}}{I{kk,4},I{kk,3}}(:,end+1) = fly.wing.pos;
+  	PAT.XPos            {I{kk,1}}{I{kk,4},I{kk,3}}(:,end+1) = pat.xpos ;
+  	PAT.YPos            {I{kk,1}}{I{kk,4},I{kk,3}}(:,end+1) = pat.ypos;
     HEAD.All.Pos        {I{kk,4},I{kk,3}}(:,end+1) = fly.head.pos;
     WING.All.Pos        {I{kk,4},I{kk,3}}(:,end+1) = fly.wing.pos;
     PAT.All.XPos        {I{kk,4},I{kk,3}}(:,end+1) = pat.xpos;
@@ -121,8 +116,8 @@ for kk = 1:N{1,1}
                     xticklabels('')
                 end
 
-                time = TIME{kk}{jj}{ii};
-                pos  = rad2deg(HEAD.Pos{kk}{jj}{ii});
+                time = TIME{kk}{jj,ii};
+                pos  = rad2deg(HEAD.Pos{kk}{jj,ii});
                 plot(time,pos)
 
             pp = pp + 1;
@@ -161,8 +156,8 @@ for kk = 1:N{1,1}
                     xticklabels('')
                 end
 
-                time = TIME{kk}{jj}{ii};
-                pos  = rad2deg(WING.Pos{kk}{jj}{ii});
+                time = TIME{kk}{jj,ii};
+                pos  = rad2deg(WING.Pos{kk}{jj,ii});
                 plot(time,pos)
 
             pp = pp + 1;
@@ -199,9 +194,8 @@ for kk = 1:N{1,1}
                     xticks(0)
                     xticklabels('')
                 end
-
-                time = TIME{kk}{jj}{ii};
-                pos  = (PAT.XPos{kk}{jj}{ii});
+                
+                pos  = (PAT.XPos{kk}{jj,ii});
                 histogram(pos);
 
             pp = pp + 1;
@@ -240,8 +234,7 @@ for kk = 1:N{1,1}
                     xticklabels('')
                 end
 
-                time = TIME{kk}{jj}{ii};
-                pos  = rad2deg(HEAD.Pos{kk}{jj}{ii});
+                pos  = rad2deg(HEAD.Pos{kk}{jj,ii});
                 histogram(pos,vector1);
 
             pp = pp + 1;
@@ -279,8 +272,7 @@ for kk = 1:N{1,1}
                     xticklabels('')
                 end
 
-                time = TIME{kk}{jj}{ii};
-                pos  = rad2deg(WING.Pos{kk}{jj}{ii});
+                pos  = rad2deg(WING.Pos{kk}{jj,ii});
                 histogram(pos,vector1);
 
             pp = pp + 1;
