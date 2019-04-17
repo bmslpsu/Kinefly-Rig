@@ -6,7 +6,7 @@ function [] = JACK_Analyze_Template(rootdir)
 %       -
 %---------------------------------------------------------------------------------------------------------------------------------
 % EXAMPLE INPUT %
-rootdir = 'F:\EXPERIMENTS\Experiment_Wing_CL_WideField';
+% rootdir = 'F:\EXPERIMENTS\Experiment_Wing_CL_WideField';
 %---------------------------------------------------------------------------------------------------------------------------------
 %% Setup Directories %%
 %---------------------------------------------------------------------------------------------------------------------------------
@@ -15,7 +15,6 @@ rootdir = 'F:\EXPERIMENTS\Experiment_Wing_CL_WideField';
 FILES = cellstr(FILES)'; % if only one character array >> store in cell
 
 [~,I,N,U] = GetFileData(FILES,'Fly','Trial','HGain','WGain');
-
 
 %% Get Data %%
 %---------------------------------------------------------------------------------------------------------------------------------
@@ -67,15 +66,16 @@ for kk = 1:N{1,end} % all trials
     pat.xpos            = FitPanel(pat.xpos,pat.time,vid.time,false); % true does debugging, false does not 
     pat.xpos            = medfilt1(pat.xpos,5);
 %     pat.xpos            = rad2deg(wrapToPi(deg2rad(pat.xpos)));
+    pat.xpos            = pat.xpos/3.75;
  	pat.ypos            = (round((AI{:,3})*(96/5)));
 	
-    fly.time            = vid.time              (span);
-    fly.head.pos        = fly.head.pos          (span);
- 	fly.wing.pos        = fly.wing.pos          (span);
-	fly.head.vel        = fly.head.vel          (span);
- 	fly.wing.vel        = fly.wing.vel          (span);
- 	pat.xpos            = pat.xpos              (span);
- 	pat.ypos            = pat.ypos              (span);
+    fly.time            = vid.time    	(span);
+    fly.head.pos        = fly.head.pos 	(span);
+ 	fly.wing.pos        = fly.wing.pos 	(span);
+	fly.head.vel        = fly.head.vel 	(span);
+ 	fly.wing.vel        = fly.wing.vel 	(span);
+ 	pat.xpos            = pat.xpos     	(span);
+ 	pat.ypos            = pat.ypos     	(span);
     
     TIME                {I{kk,1}}{I{kk,4},I{kk,3}}(:,end+1) = fly.time;
     HEAD.Pos            {I{kk,1}}{I{kk,4},I{kk,3}}(:,end+1) = fly.head.pos;
@@ -87,6 +87,46 @@ for kk = 1:N{1,end} % all trials
     PAT.All.XPos        {I{kk,4},I{kk,3}}(:,end+1) = pat.xpos;
     PAT.All.YPos        {I{kk,4},I{kk,3}}(:,end+1) = pat.ypos;
 end
+%% Plot pattern position %%
+%---------------------------------------------------------------------------------------------------------------------------------
+figure (100) ; clf ; hold on
+set(gcf,'Color','w')
+set(gcf,'Name','Head Position')
+set(gcf,'Position',[0 0 N{1,4}*400 N{1,3}*400])
+movegui(gcf,'center')
+for kk = 1:N{1,1}
+    pp = 1;
+    for jj = 1:N{1,4}
+        for ii = 1:N{1,3}
+            subplot(N{1,3},N{1,4},pp) ; hold on
+                xlim([0 20])
+                ylim([1 96])
+                if any(pp==(1:N{1,4}))
+                    title(['Wing Gain = ' num2str(U{1,4}{1}(jj))],'FontSize',12,'fontweight','bold')
+                end
+                if ((pp-1)/N{1,4}) == floor((pp-1)/N{1,4})
+                    ylabel({['Head Gain = ' num2str(U{1,3}{1}(ii))],['Pattern Position(' char(176) ')']},...
+                        'FontSize',13,'fontweight','bold')
+                else
+                    yticks(0)
+                    yticklabels('')  
+                end
+                if any(pp==(N{1,4}*N{1,3}-N{1,4}+1):(N{1,4}*N{1,3}))
+                    xlabel('Time (s)','FontSize',12,'fontweight','bold')
+                else
+                    xticks(0)
+                    xticklabels('')
+                end
+
+                time = TIME{kk}{jj,ii};
+                pos  = (PAT.XPos{kk}{jj,ii});
+                plot(time,pos)
+
+            pp = pp + 1;
+        end
+    end
+end
+
 %% Plot head position %%
 %---------------------------------------------------------------------------------------------------------------------------------
 figure (1) ; clf ; hold on
@@ -140,12 +180,12 @@ for kk = 1:N{1,1}
         for ii = 1:N{1,3}
             subplot(N{1,3},N{1,4},pp) ; hold on
                 xlim([0 20])
-                ylim(120*[-1 1])
+                ylim(40*[-1 1])
                 if any(pp==(1:N{1,4}))
                     title(['Wing Gain = ' num2str(U{1,4}{1}(jj))],'FontSize',12,'fontweight','bold')
                 end
                 if ((pp-1)/N{1,4}) == floor((pp-1)/N{1,4})
-                    ylabel({['Head Gain = ' num2str(U{1,3}{1}(ii))],['Wing Position(' char(176) ')']},...
+                    ylabel({['Head Gain = ' num2str(U{1,3}{1}(ii))],['\Delta WBA(' char(176) ')']},...
                         'FontSize',13,'fontweight','bold')
                 else
                     yticks(0)
@@ -166,7 +206,8 @@ for kk = 1:N{1,1}
         end
     end
 end
-%% Histogram of Pattern Position
+%% Histogram of Pattern Position %%
+%---------------------------------------------------------------------------------------------------------------------------------
 figure (3) ; clf ; hold on
 set(gcf,'Color','w')
 set(gcf,'Name','Histogram of Pattern Position')
@@ -184,7 +225,7 @@ for kk = 1:N{1,1}
                     title(['Wing Gain = ' num2str(U{1,4}{1}(jj))],'FontSize',12,'fontweight','bold')
                 end
                 if ((pp-1)/N{1,4}) == floor((pp-1)/N{1,4})
-                    ylabel({['Head Gain = ' num2str(U{1,3}{1}(ii))],['Wing Position(' char(176) ')']},...
+                    ylabel(['Head Gain = ' num2str(U{1,3}{1}(ii))],...
                         'FontSize',13,'fontweight','bold')
                 else
                     yticks(0)
@@ -198,14 +239,15 @@ for kk = 1:N{1,1}
                 end
                 
                 pos  = (PAT.XPos{kk}{jj,ii});
-                histogram(pos,3.75:3.75:360);
+                histogram(pos,1:96);
 
             pp = pp + 1;
         end
     end
 end
 
-%% Histogram of HEAD Position
+%% Histogram of HEAD Position %%
+%---------------------------------------------------------------------------------------------------------------------------------
 figure (4) ; clf ; hold on
 set(gcf,'Color','w')
 set(gcf,'Name','Histogram of Head Position')
@@ -217,20 +259,19 @@ for kk = 1:N{1,1}
     for jj = 1:N{1,4}
         for ii = 1:N{1,3}
             subplot(N{1,3},N{1,4},pp) ; hold on
-                %xlim([0 20])
-                %ylim(120*[-1 1])
+                ylim([0 3500])
                 if any(pp==(1:N{1,4}))
                     title(['Wing Gain = ' num2str(U{1,4}{1}(jj))],'FontSize',12,'fontweight','bold')
                 end
                 if ((pp-1)/N{1,4}) == floor((pp-1)/N{1,4})
-                    ylabel({['Head Gain = ' num2str(U{1,3}{1}(ii))],['Head Position(' char(176) ')']},...
+                    ylabel(['Head Gain = ' num2str(U{1,3}{1}(ii))],...
                         'FontSize',13,'fontweight','bold')
                 else
                     yticks(0)
                     yticklabels('')  
                 end
                 if any(pp==(N{1,4}*N{1,3}-N{1,4}+1):(N{1,4}*N{1,3}))
-                    xlabel('Head Position','FontSize',12,'fontweight','bold')
+                    xlabel(['Head Angle (' char(176) ')'],'FontSize',12,'fontweight','bold')
                 else
                     xticks(0)
                     xticklabels('')
@@ -243,32 +284,32 @@ for kk = 1:N{1,1}
         end
     end
 end
-%% Histogram of WING Position
+%% Histogram of WING Position %%
+%---------------------------------------------------------------------------------------------------------------------------------
 figure (5) ; clf ; hold on
 set(gcf,'Color','w')
 set(gcf,'Name','Histogram of Wing Position')
 set(gcf,'Position',[0 0 N{1,4}*400 N{1,3}*400])
 movegui(gcf,'center')
-vector1 = -20:1:20;
+vector1 = -35:1:35;
 for kk = 1:N{1,1}
     pp = 1;
     for jj = 1:N{1,4}
         for ii = 1:N{1,3}
             subplot(N{1,3},N{1,4},pp) ; hold on
-                %xlim([0 20])
-                %ylim(120*[-1 1])
+                ylim([0 1500])
                 if any(pp==(1:N{1,4}))
                     title(['Wing Gain = ' num2str(U{1,4}{1}(jj))],'FontSize',12,'fontweight','bold')
                 end
                 if ((pp-1)/N{1,4}) == floor((pp-1)/N{1,4})
-                    ylabel({['Head Gain = ' num2str(U{1,3}{1}(ii))],['Wing Position(' char(176) ')']},...
+                    ylabel(['Head Gain = ' num2str(U{1,3}{1}(ii))],...
                         'FontSize',13,'fontweight','bold')
                 else
                     yticks(0)
                     yticklabels('')  
                 end
                 if any(pp==(N{1,4}*N{1,3}-N{1,4}+1):(N{1,4}*N{1,3}))
-                    xlabel('Wing Position','FontSize',12,'fontweight','bold')
+                    xlabel(['\Delta WBA(' char(176) ')'],'FontSize',12,'fontweight','bold')
                 else
                     xticks(0)
                     xticklabels('')
@@ -281,7 +322,8 @@ for kk = 1:N{1,1}
         end
     end
 end
-%% Histogram of Head Position ALL FLIES 
+%% Histogram of Head Position ALL FLIES %%
+%---------------------------------------------------------------------------------------------------------------------------------
 figure (6) ; clf ; hold on
 set(gcf,'Color','w')
 set(gcf,'Name','Histogram of Head Position')
@@ -292,20 +334,20 @@ pp = 1;
 for jj = 1:N{1,4}
     for ii = 1:N{1,3}
         subplot(N{1,3},N{1,4},pp) ; hold on
-            %xlim([0 20])
-            %ylim(120*[-1 1])
+%             xlim([0 20])
+            ylim([0 5000])
             if any(pp==(1:N{1,4}))
                 title(['Wing Gain = ' num2str(U{1,4}{1}(jj))],'FontSize',12,'fontweight','bold')
             end
             if ((pp-1)/N{1,4}) == floor((pp-1)/N{1,4})
-                ylabel({['Head Gain = ' num2str(U{1,3}{1}(ii))],['Head Position(' char(176) ')']},...
+                ylabel(['Head Gain = ' num2str(U{1,3}{1}(ii))],...
                     'FontSize',13,'fontweight','bold')
             else
                 yticks(0)
                 yticklabels('')  
             end
             if any(pp==(N{1,4}*N{1,3}-N{1,4}+1):(N{1,4}*N{1,3}))
-                xlabel('Pattern Position','FontSize',12,'fontweight','bold')
+                xlabel(['Head Angle (' char(176) ')'],'FontSize',12,'fontweight','bold')
             else
                 xticks(0)
                 xticklabels('')
@@ -317,7 +359,8 @@ for jj = 1:N{1,4}
         pp = pp + 1;
     end
 end
-%% Histogram of Pattern Position ALL FLIES 
+%% Histogram of Pattern Position ALL FLIES %%
+%---------------------------------------------------------------------------------------------------------------------------------
 figure (7) ; clf ; hold on
 set(gcf,'Color','w')
 set(gcf,'Name','Histogram of Pattern Position')
@@ -334,7 +377,7 @@ for jj = 1:N{1,4}
                 title(['Wing Gain = ' num2str(U{1,4}{1}(jj))],'FontSize',12,'fontweight','bold')
             end
             if ((pp-1)/N{1,4}) == floor((pp-1)/N{1,4})
-                ylabel({['Head Gain = ' num2str(U{1,3}{1}(ii))],['Pattern Position(' char(176) ')']},...
+                ylabel(['Head Gain = ' num2str(U{1,3}{1}(ii))],...
                     'FontSize',13,'fontweight','bold')
             else
                 yticks(0)
@@ -353,7 +396,8 @@ for jj = 1:N{1,4}
         pp = pp + 1;
     end
 end
-%% Histogram of Wing Position ALL FLIES 
+%% Histogram of Wing Position ALL FLIES %%
+%---------------------------------------------------------------------------------------------------------------------------------
 figure (8) ; clf ; hold on
 set(gcf,'Color','w')
 set(gcf,'Name','Histogram of Pattern Position')
@@ -365,19 +409,19 @@ for jj = 1:N{1,4}
     for ii = 1:N{1,3}
         subplot(N{1,3},N{1,4},pp) ; hold on
             %xlim([0 20])
-            %ylim(120*[-1 1])
+            ylim([0 2000])
             if any(pp==(1:N{1,4}))
                 title(['Wing Gain = ' num2str(U{1,4}{1}(jj))],'FontSize',12,'fontweight','bold')
             end
             if ((pp-1)/N{1,4}) == floor((pp-1)/N{1,4})
-                ylabel({['Head Gain = ' num2str(U{1,3}{1}(ii))],['Wing Position(' char(176) ')']},...
+                ylabel(['Head Gain = ' num2str(U{1,3}{1}(ii))],...
                     'FontSize',13,'fontweight','bold')
             else
                 yticks(0)
                 yticklabels('')  
             end
             if any(pp==(N{1,4}*N{1,3}-N{1,4}+1):(N{1,4}*N{1,3}))
-                xlabel('Pattern Position','FontSize',12,'fontweight','bold')
+                    xlabel(['\Delta WBA(' char(176) ')'],'FontSize',12,'fontweight','bold')
             else
                 xticks(0)
                 xticklabels('')
@@ -389,7 +433,8 @@ for jj = 1:N{1,4}
         pp = pp + 1;
     end
 end
-%% Box Plot of Head Position
+%% Box Plot of Head Position %%
+%---------------------------------------------------------------------------------------------------------------------------------
 figure (9) ; clf ; hold on
 set(gcf,'Color','w')
 set(gcf,'Name','Histogram of Head Position')
