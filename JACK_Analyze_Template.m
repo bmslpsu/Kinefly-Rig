@@ -6,7 +6,7 @@ function [] = JACK_Analyze_Template(rootdir)
 %       -
 %---------------------------------------------------------------------------------------------------------------------------------
 % EXAMPLE INPUT %
-% rootdir = 'H:\EXPERIMENTS\Experiment_Wing_CL_WideField\mat\Flies 1-3';
+rootdir = 'F:\EXPERIMENTS\Experiment_Wing_CL_WideField';
 %---------------------------------------------------------------------------------------------------------------------------------
 %% Setup Directories %%
 %---------------------------------------------------------------------------------------------------------------------------------
@@ -15,6 +15,7 @@ function [] = JACK_Analyze_Template(rootdir)
 FILES = cellstr(FILES)'; % if only one character array >> store in cell
 
 [~,I,N,U] = GetFileData(FILES,'Fly','Trial','HGain','WGain');
+
 
 %% Get Data %%
 %---------------------------------------------------------------------------------------------------------------------------------
@@ -65,6 +66,7 @@ for kk = 1:N{1,end} % all trials
  	pat.xpos            = 3.75*(round((AI{:,2})*(96/5)));
     pat.xpos            = FitPanel(pat.xpos,pat.time,vid.time,false); % true does debugging, false does not 
     pat.xpos            = medfilt1(pat.xpos,5);
+%     pat.xpos            = rad2deg(wrapToPi(deg2rad(pat.xpos)));
  	pat.ypos            = (round((AI{:,3})*(96/5)));
 	
     fly.time            = vid.time              (span);
@@ -74,7 +76,7 @@ for kk = 1:N{1,end} % all trials
  	fly.wing.vel        = fly.wing.vel          (span);
  	pat.xpos            = pat.xpos              (span);
  	pat.ypos            = pat.ypos              (span);
-
+    
     TIME                {I{kk,1}}{I{kk,4},I{kk,3}}(:,end+1) = fly.time;
     HEAD.Pos            {I{kk,1}}{I{kk,4},I{kk,3}}(:,end+1) = fly.head.pos;
   	WING.Pos            {I{kk,1}}{I{kk,4},I{kk,3}}(:,end+1) = fly.wing.pos;
@@ -196,7 +198,7 @@ for kk = 1:N{1,1}
                 end
                 
                 pos  = (PAT.XPos{kk}{jj,ii});
-                histogram(pos);
+                histogram(pos,3.75:3.75:360);
 
             pp = pp + 1;
         end

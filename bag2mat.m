@@ -32,8 +32,6 @@ elseif nargin==2
         version = 0;
     elseif strcmp(varargin{2},'kinefly') 
         version = 1;
-    elseif strcmp(varargin{2},'retrack') 
-        version = 2;
     else
         error('2nd input must be ''raw'' or ''kinefly''')        
     end
