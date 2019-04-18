@@ -63,7 +63,7 @@ for kk = 1:N{1,end} % all trials
 	[pat.b,pat.a]    	= butter(2,pat.Fc/(pat.Fs/2),'low'); % 2nd-order low-pass butterworth filter
     pat.xpos            = filtfilt(pat.b,pat.a,AI{:,2});
  	pat.xpos            = 3.75*(round((AI{:,2})*(96/5)));
-    pat.xpos            = FitPanel(pat.xpos,pat.time,vid.time,false); % true does debugging, false does not 
+    pat.xpos            = FitPanel(pat.xpos,pat.time,vid.time,false,false); % true does debugging, false does not 
     pat.xpos            = medfilt1(pat.xpos,5);
 %     pat.xpos            = rad2deg(wrapToPi(deg2rad(pat.xpos)));
     pat.xpos            = pat.xpos/3.75;
@@ -335,7 +335,7 @@ for jj = 1:N{1,4}
     for ii = 1:N{1,3}
         subplot(N{1,3},N{1,4},pp) ; hold on
 %             xlim([0 20])
-            ylim([0 5000])
+            ylim([0 6000])
             if any(pp==(1:N{1,4}))
                 title(['Wing Gain = ' num2str(U{1,4}{1}(jj))],'FontSize',12,'fontweight','bold')
             end

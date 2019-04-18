@@ -1,5 +1,5 @@
 function [Vid,VidTime,FlyState,AI,FILES] = bag2mat(varargin)
-%% bag2mat: Parses file name data and returns tables with relevant information: saves in .mat files
+%% bag2mat: Parses file name data and returns tables with relevant information: saves in .mat file
 %   INPUTS:
 %       root        :   varargin=root , root directory containg .bag files >>> files will be saved in a folder titled "mat"
 %                       inside this directory. If no input is given, will default to current folder.
