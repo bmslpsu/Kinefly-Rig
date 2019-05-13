@@ -68,5 +68,6 @@ ylabel(['Angle (' char(176) ')'],'FontSize',13,'fontweight','bold')
 xlabel('Time (s)','FontSize',12,'fontweight','bold')
 plot(fly.time,rad2deg(fly.head.pos-mean(fly.head.pos)),'b','LineWidth',1)
 plot(fly.time,rad2deg(fly.wing.pos-mean(fly.wing.pos)),'r','LineWidth',1)
+plot(fly.time,pat.xpos - mean(pat.xpos),'g','LineWidth',1)
 legend({'Head','\Delta WBA'},'FontSize',12)
 end

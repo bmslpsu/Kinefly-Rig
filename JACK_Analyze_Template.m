@@ -6,7 +6,7 @@ function [] = JACK_Analyze_Template(rootdir)
 %       -
 %---------------------------------------------------------------------------------------------------------------------------------
 % EXAMPLE INPUT %
-% rootdir = 'F:\EXPERIMENTS\Experiment_Wing_CL_WideField';
+rootdir = 'E:\Jack\Experiment_Wing_CL_Figure\mat';
 %---------------------------------------------------------------------------------------------------------------------------------
 %% Setup Directories %%
 %---------------------------------------------------------------------------------------------------------------------------------
@@ -14,7 +14,7 @@ function [] = JACK_Analyze_Template(rootdir)
 [FILES, PATH] = uigetfile({'*.mat', 'DAQ-files'}, 'Select files', rootdir, 'MultiSelect','on');
 FILES = cellstr(FILES)'; % if only one character array >> store in cell
 
-[~,I,N,U] = GetFileData(FILES,'Fly','Trial','HGain','WGain');
+[~,I,N,U] = GetFileData(FILES,false,'Fly','Trial','HGain','WGain');
 
 %% Get Data %%
 %---------------------------------------------------------------------------------------------------------------------------------
@@ -335,7 +335,7 @@ for jj = 1:N{1,4}
     for ii = 1:N{1,3}
         subplot(N{1,3},N{1,4},pp) ; hold on
 %             xlim([0 20])
-            ylim([0 6000])
+            ylim([0 12000])
             if any(pp==(1:N{1,4}))
                 title(['Wing Gain = ' num2str(U{1,4}{1}(jj))],'FontSize',12,'fontweight','bold')
             end
