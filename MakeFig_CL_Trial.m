@@ -1,4 +1,4 @@
-function [] = MakeFig_CL_Trial(rootdir)
+function [FILES] = MakeFig_CL_Trial(rootdir)
 %% MakeFig_CL_Trial: plot CL Kinefly trial
 %   INPUTS:
 %       root  	: directory where .mat files are located
@@ -7,6 +7,7 @@ function [] = MakeFig_CL_Trial(rootdir)
 %---------------------------------------------------------------------------------------------------------------------------------
 % EXAMPLE INPUT %
 rootdir = 'F:\MOVIE\Kinefly_Demo\mat\';
+% rootdir = 'E:\Jack\Experiment_Wing_CL_Figure\mat';
 %---------------------------------------------------------------------------------------------------------------------------------
 %% Setup Directories %%
 %---------------------------------------------------------------------------------------------------------------------------------
@@ -22,7 +23,7 @@ fly = [];
 FlyState = [];
 AI = [];
 fly.Fc = 20;
-span = 1:1:900;
+span = 2:1:900;
 for kk = 1:length(FILES) % all trials
     filename = fullfile(PATH,FILES{kk}); % full file name
     load(filename,'FlyState','AI','VidTime') % load in fly kinematics & arena voltages
@@ -56,18 +57,39 @@ for kk = 1:length(FILES) % all trials
 end
 %% Plot head position %%
 %---------------------------------------------------------------------------------------------------------------------------------
-figure (1) ; clf ; hold on
-set(gcf,'Color','w')
-set(gcf,'Name','Head Position')
-set(gcf,'Position',[0 0 1*900 1*400])
-movegui(gcf,'center')
-xlim([0 10])
-ylim(25*[-1 1])
-yticks(-30:5:30)
-ylabel(['Angle (' char(176) ')'],'FontSize',13,'fontweight','bold')
-xlabel('Time (s)','FontSize',12,'fontweight','bold')
-plot(fly.time,rad2deg(fly.head.pos-mean(fly.head.pos)),'b','LineWidth',1)
-plot(fly.time,rad2deg(fly.wing.pos-mean(fly.wing.pos)),'r','LineWidth',1)
-plot(fly.time,pat.xpos - mean(pat.xpos),'g','LineWidth',1)
-legend({'Head','\Delta WBA'},'FontSize',12)
+FIG = figure (1) ; clf ; hold on
+FIG.Color = 'w';
+% FIG.Name = ['Closed-Loop Kinefly Trial: Figure (' FILES{1} ')'];
+FIG.Name = ['Closed-Loop Kinefly Trial: Wide Field (' FILES{1} ')'];
+FIG.Position = [0 0 1*900 1*400];
+movegui(FIG,'center')
+
+yyaxis left
+    ax.L = gca;
+    ax.L.YColor = [0 0 0];
+    ax.L.XLabel.String = 'Time (s)';
+    ax.L.YLabel.String = ['Fly (' char(176) ')'];
+    ax.L.FontSize = 12;
+    
+    axis(ax.L) ; hold on
+    plot(fly.time,rad2deg(fly.head.pos-mean(fly.head.pos)),'-b','LineWidth',1)
+    plot(fly.time,rad2deg(fly.wing.pos-mean(fly.wing.pos)),'-r','LineWidth',1)
+    ylim(max(ax.L.YLim)*[-1 1])
+    ylim(21*[-1 1])
+
+yyaxis right
+    ax.R = gca;
+    ax.R.YColor = [0 1 0];
+    ax.R.YLabel.String = ['Background (' char(176) ')'];
+    ax.R.YLabel.Color = [0 0 0];
+    ax.R.FontSize = 12;
+
+    axis(ax.R) ; hold on
+    Pat = pat.xpos - mean(pat.xpos);
+    Pat(1:10) = Pat(10);
+    plot(fly.time,Pat,'g','LineWidth',1)
+    ylim(max(ax.R.YLim)*[-1 1])
+    
+    xlim([0 10])   
+ 	legend('Head','\Delta WBA','Background')
 end
