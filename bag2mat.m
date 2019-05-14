@@ -50,7 +50,7 @@ n.Files = length(FILES); % # of .bag files to parse
 matdir = [PATH 'mat']; % export directory to save .mat files
 [status,msg,~] = mkdir(matdir); % create directory for .mat files
 if status
-%     warning(msg)
+    warning(msg)
     disp(['Folder located: ' matdir])
 else
     error('Directory not created')
@@ -69,6 +69,7 @@ n.Topic = length(TopicList); % # of topics in .bag files
 W = waitbar(0/n.Files,'Saving data...');
 tic
 for kk = 1:n.Files
+ 	clear Vid VidTime FlyState AI Time Msg Topic Bag syncTime
     % Get topics, messages, & time
     Bag     = rosbag([PATH FILES{kk}]); % load bag
     Msg     = cell(1,n.Topic); % messages for each topic
@@ -150,6 +151,7 @@ for kk = 1:n.Files
     else
         AI = [];
     end
+    
     % Save .mat file in directory
     [~,filename,~] = fileparts(FILES{kk}); % get filename
     dateIdx = strfind(filename,'201'); % will work until 2020
@@ -157,7 +159,6 @@ for kk = 1:n.Files
     save([PATH '\mat\' filename '.mat'] , 'Vid','VidTime','FlyState','AI','FILES','-v7.3') % save data to .mat file
     waitbar(kk/n.Files,W,'Saving data...');
     
-    clear Vid VidTime FlyState AI Time Msg Topic Bag syncTime
 end
 close(W)
 disp('DONE')
