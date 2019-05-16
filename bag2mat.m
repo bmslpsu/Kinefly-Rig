@@ -90,13 +90,21 @@ for kk = 1:n.Files
         AI        	= nan(n.AState,n.ACh+1); % AI channel cell (header: time,ch0,ch1,ch2)
     end
 
- 	InitFrame = readImage(Msg{1}{1}); % first video frame
-    [n.PixelY,n.PixelX,n.bit] = size(InitFrame); % size of first video frame
-    Vid = uint8(nan(n.PixelY,n.PixelX,n.bit,n.Frame)); % video cell
+    if ~isempty(Msg{1})
+        InitFrame = readImage(Msg{1}{1}); % first video frame
+        [n.PixelY,n.PixelX,n.bit] = size(InitFrame); % size of first video frame
+        Vid = uint8(nan(n.PixelY,n.PixelX,n.bit,n.Frame)); % video cell
+        
+        % Sync times
+        syncTime        = Time{1}(1); % sync times to vid frame
+        VidTime(:,1)    = Time{1} - syncTime; % video time
+    else
+        Vid = [];
+        VidTime = [];
+      	% Sync times
+        syncTime        = Time{2}(1); % sync times to vid frame
+    end
     
-    % Sync times
-    syncTime        = Time{1}(1); % sync times to vid frame
-    VidTime(:,1)    = Time{1} - syncTime; % video time
     FlyState(:,1)   = Time{2} - syncTime; % flystate time
     if ~isempty(Msg{3})
         AI(:,1) = Time{3} - syncTime; % AI time
