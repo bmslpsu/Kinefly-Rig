@@ -403,13 +403,13 @@ set(gcf,'Color','w')
 set(gcf,'Name','Histogram of Pattern Position')
 set(gcf,'Position',[0 0 N{1,4}*400 N{1,3}*400])
 movegui(gcf,'center')
-vector = -30:1:30;
+vector = -50:1:50;
 pp = 1;
 for jj = 1:N{1,4}
     for ii = 1:N{1,3}
         subplot(N{1,3},N{1,4},pp) ; hold on
             %xlim([0 20])
-            ylim([0 2000])
+            ylim([0 6000])
             if any(pp==(1:N{1,4}))
                 title(['Wing Gain = ' num2str(U{1,4}{1}(jj))],'FontSize',12,'fontweight','bold')
             end
