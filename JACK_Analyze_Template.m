@@ -62,11 +62,13 @@ for kk = 1:N{1,end} % all trials
     pat.Fc              = 30;
 	[pat.b,pat.a]    	= butter(2,pat.Fc/(pat.Fs/2),'low'); % 2nd-order low-pass butterworth filter
     pat.xpos            = filtfilt(pat.b,pat.a,AI{:,2});
- 	pat.xpos            = 3.75*(round((AI{:,2})*(96/5)));
-    pat.xpos            = FitPanel(pat.xpos,pat.time,vid.time,false,false); % true does debugging, false does not 
-    pat.xpos            = medfilt1(pat.xpos,5);
+ 	pat.xpos            = 3.75*(round((AI{:,2})*(96/4.9)));
+%     pat.xpos            = FitPanel(pat.xpos,pat.time,vid.time,false,false); % true does debugging, false does not 
+%     pat.xpos            = medfilt1(pat.xpos,5);
 %     pat.xpos            = rad2deg(wrapToPi(deg2rad(pat.xpos)));
-    pat.xpos            = pat.xpos/3.75;
+    pat.xpos            = pat.xpos/3.75 - 90;
+    pat.xpos(pat.xpos<((96/2)-96)) = pat.xpos(pat.xpos<((96/2)-96)) + (96);
+    pat.xpos            = pat.xpos * 3.75;
  	pat.ypos            = (round((AI{:,3})*(96/5)));
 	
     fly.time            = vid.time    	(span);
@@ -366,13 +368,13 @@ set(gcf,'Color','w')
 set(gcf,'Name','Histogram of Pattern Position')
 set(gcf,'Position',[0 0 N{1,4}*400 N{1,3}*400])
 movegui(gcf,'center')
-vector = -180:1:180;
+vector = 3.75*(-96/2:1:96/2);
 pp = 1;
 for jj = 1:N{1,4}
     for ii = 1:N{1,3}
         subplot(N{1,3},N{1,4},pp) ; hold on
             %xlim([0 20])
-            %ylim(120*[-1 1])
+            ylim([0 4000])
             if any(pp==(1:N{1,4}))
                 title(['Wing Gain = ' num2str(U{1,4}{1}(jj))],'FontSize',12,'fontweight','bold')
             end
@@ -384,14 +386,13 @@ for jj = 1:N{1,4}
                 yticklabels('')  
             end
             if any(pp==(N{1,4}*N{1,3}-N{1,4}+1):(N{1,4}*N{1,3}))
-                xlabel('Pattern Position','FontSize',12,'fontweight','bold')
+                xlabel(['Pattern Position (' char(176) ')'],'FontSize',12,'fontweight','bold')
             else
-                xticks(0)
                 xticklabels('')
             end
 
             pos  = (PAT.All.XPos{jj,ii}); 
-            histogram(pos,'facecolor','k');
+            histogram(pos,vector,'facecolor','k');
 
         pp = pp + 1;
     end
@@ -400,10 +401,10 @@ end
 %---------------------------------------------------------------------------------------------------------------------------------
 figure (8) ; clf ; hold on
 set(gcf,'Color','w')
-set(gcf,'Name','Histogram of Pattern Position')
+set(gcf,'Name','Histogram of Wing Position')
 set(gcf,'Position',[0 0 N{1,4}*400 N{1,3}*400])
 movegui(gcf,'center')
-vector = -50:1:50;
+vector = -70:1:70;
 pp = 1;
 for jj = 1:N{1,4}
     for ii = 1:N{1,3}
