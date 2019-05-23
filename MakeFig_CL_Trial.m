@@ -6,8 +6,10 @@ function [FILES] = MakeFig_CL_Trial(rootdir)
 %       -
 %---------------------------------------------------------------------------------------------------------------------------------
 % EXAMPLE INPUT %
-rootdir = 'F:\MOVIE\Kinefly_Demo\mat\';
-% rootdir = 'E:\Jack\Experiment_Wing_CL_Figure\mat';
+% rootdir = 'F:\MOVIE\Kinefly_Demo\mat\';
+rootdir = 'S:\Restricted\BC\EXPERIMENTS\Experiment_Wing_CL_Figure\mat';
+rootdir = 'S:\Restricted\BC\EXPERIMENTS\Experiment_Head_CL_Figure\mat';
+% rootdir = 'S:\Restricted\BC\EXPERIMENTS\Experiment_ChirpLog_Walking\mat';
 %---------------------------------------------------------------------------------------------------------------------------------
 %% Setup Directories %%
 %---------------------------------------------------------------------------------------------------------------------------------
@@ -77,19 +79,19 @@ yyaxis left
     ylim(max(ax.L.YLim)*[-1 1])
     ylim(21*[-1 1])
 
-yyaxis right
-    ax.R = gca;
-    ax.R.YColor = [0 1 0];
-    ax.R.YLabel.String = ['Background (' char(176) ')'];
-    ax.R.YLabel.Color = [0 0 0];
-    ax.R.FontSize = 12;
-
-    axis(ax.R) ; hold on
-    Pat = pat.xpos - mean(pat.xpos);
-    Pat(1:10) = Pat(10);
-    plot(fly.time,Pat,'g','LineWidth',1)
-    ylim(max(ax.R.YLim)*[-1 1])
-    
-    xlim([0 10])   
- 	legend('Head','\Delta WBA','Background')
+% yyaxis right
+%     ax.R = gca;
+%     ax.R.YColor = [0 1 0];
+%     ax.R.YLabel.String = ['Background (' char(176) ')'];
+%     ax.R.YLabel.Color = [0 0 0];
+%     ax.R.FontSize = 12;
+% 
+%     axis(ax.R) ; hold on
+%     Pat = pat.xpos - mean(pat.xpos);
+%     Pat(1:10) = Pat(10);
+%     plot(fly.time,Pat,'g','LineWidth',1)
+%     ylim(max(ax.R.YLim)*[-1 1])
+%     
+%     xlim([0 10])   
+%  	legend('Head','\Delta WBA','Background')
 end
