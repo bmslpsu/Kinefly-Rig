@@ -7,9 +7,10 @@ function [FILES] = MakeFig_CL_Trial(rootdir)
 %---------------------------------------------------------------------------------------------------------------------------------
 % EXAMPLE INPUT %
 % rootdir = 'F:\MOVIE\Kinefly_Demo\mat\';
-rootdir = 'S:\Restricted\BC\EXPERIMENTS\Experiment_Wing_CL_Figure\mat';
-rootdir = 'S:\Restricted\BC\EXPERIMENTS\Experiment_Head_CL_Figure\mat';
+rootdir = 'H:\EXPERIMENTS\Experiment_Wing_CL_WideField';
+rootdir = 'S:\Restricted\BC\Backup\EXPERIMENTS\Experiment_Wing_CL_Figure\mat';
 % rootdir = 'S:\Restricted\BC\EXPERIMENTS\Experiment_ChirpLog_Walking\mat';
+% fly_1_trial_4_HGain_0_WGain_5
 %---------------------------------------------------------------------------------------------------------------------------------
 %% Setup Directories %%
 %---------------------------------------------------------------------------------------------------------------------------------
@@ -25,7 +26,7 @@ fly = [];
 FlyState = [];
 AI = [];
 fly.Fc = 20;
-span = 2:1:900;
+span = 2:2400;
 for kk = 1:length(FILES) % all trials
     filename = fullfile(PATH,FILES{kk}); % full file name
     load(filename,'FlyState','AI','VidTime') % load in fly kinematics & arena voltages
@@ -63,10 +64,11 @@ FIG = figure (1) ; clf ; hold on
 FIG.Color = 'w';
 % FIG.Name = ['Closed-Loop Kinefly Trial: Figure (' FILES{1} ')'];
 FIG.Name = ['Closed-Loop Kinefly Trial: Wide Field (' FILES{1} ')'];
-FIG.Position = [0 0 1*900 1*400];
+FIG.Units = 'inches';
+FIG.Position = [0 0 6 2.5];
 movegui(FIG,'center')
-
-yyaxis left
+% pat.xpos = wrapdata(pat.xpos,137.3,false);
+% yyaxis left
     ax.L = gca;
     ax.L.YColor = [0 0 0];
     ax.L.XLabel.String = 'Time (s)';
@@ -77,21 +79,22 @@ yyaxis left
     plot(fly.time,rad2deg(fly.head.pos-mean(fly.head.pos)),'-b','LineWidth',1)
     plot(fly.time,rad2deg(fly.wing.pos-mean(fly.wing.pos)),'-r','LineWidth',1)
     ylim(max(ax.L.YLim)*[-1 1])
-    ylim(21*[-1 1])
+    ylim(20*[-1 1])
 
-% yyaxis right
-%     ax.R = gca;
-%     ax.R.YColor = [0 1 0];
-%     ax.R.YLabel.String = ['Background (' char(176) ')'];
-%     ax.R.YLabel.Color = [0 0 0];
-%     ax.R.FontSize = 12;
-% 
-%     axis(ax.R) ; hold on
-%     Pat = pat.xpos - mean(pat.xpos);
-%     Pat(1:10) = Pat(10);
-%     plot(fly.time,Pat,'g','LineWidth',1)
-%     ylim(max(ax.R.YLim)*[-1 1])
-%     
-%     xlim([0 10])   
-%  	legend('Head','\Delta WBA','Background')
+yyaxis right
+    ax.R = gca;
+    ax.R.YColor = [0 1 0];
+    ax.R.YLabel.String = ['Background (' char(176) ')'];
+    ax.R.YLabel.Color = [0 0 0];
+    ax.R.FontSize = 12;
+
+    axis(ax.R) ; hold on
+    Pat = pat.xpos - mean(pat.xpos);
+    Pat(1:10) = Pat(10);
+    plot(fly.time,Pat,'g','LineWidth',1)
+    ylim(max(ax.R.YLim)*[-1 1])
+    
+    xlim([0 20])   
+ 	leg = legend('Head','\Delta WBA','Object');
+    leg.Box = 'off';
 end
