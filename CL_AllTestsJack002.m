@@ -24,10 +24,9 @@ end
 
 % **CREATE VECTOR STRENGTH TABLES** 
 newvars = zeros(size(I,1),4);
-AddTableVars = splitvars((table(zeros(size(I,1),4))));
-AddTableVars.Properties.VariableNames = {'PatStr', 'HStr','WStr','ErrStr'};
+AddTableVars = splitvars((table(zeros(size(I,1),8))));
+AddTableVars.Properties.VariableNames = {'zPat', 'pPat','zH','pH','zW','pW','zErr','pErr'};
 stats = [I AddTableVars];
-
 
 % Get Data
 TIME            = cell(N.Fly,1);
@@ -67,23 +66,30 @@ for kk = 1:N.file % all trials
     
     end
 	pat.time    	= AI.Time;
- 	pat.xpos     	= (round((AI{:,2})*(96/vrange)));
+ 	pat.xpos     	= deg2rad(3.75*(round((AI{:,2})*(96/vrange))));
     % pat.xpos     	= 3.75*(pat.xpos - center);  %don't need as of now
     
     fly.Ts       	= mean(diff(fly.time));
     fly.Fs          = 1/fly.Ts; 
     [fly.b,fly.a]  	= butter(2,fly.Fc/(fly.Fs/2),'low');
-    fly.head     	= filtfilt(fly.b,fly.a,FlyState{:,2});
+    fly.head     	= deg2rad(filtfilt(fly.b,fly.a,FlyState{:,2}));
     fly.lwing      	= FlyState{:,3};
     fly.rwing     	= FlyState{:,4};
     fly.wba       	= fly.lwing - fly.rwing;
     fly.wba         = hampel(1:length(fly.wba),fly.wba);
-    fly.wba         = filtfilt(fly.b,fly.a,fly.wba);
+    fly.wba         = deg2rad(filtfilt(fly.b,fly.a,fly.wba));
     
     fly.time      	= fly.time 	(span);
     fly.head     	= fly.head 	(span);
  	fly.wba      	= fly.wba 	(span);
  	pat.xpos     	= pat.xpos	(span);
+    Err             = pat.xpos - fly.head;
+    
+    [stats.pPat(kk),stats.zPat(kk)] = circ_rtest(pat.xpos);
+    [stats.pH(kk),stats.zH(kk)] = circ_rtest(fly.head);
+    [stats.pW(kk),stats.zW(kk)] = circ_rtest(fly.wba);
+    [stats.pErr(kk),stats.zErr(kk)] = circ_rtest(Err);
+    
     
     TIME            {I.Fly(kk)}{I.WGain(kk),I.HGain(kk)}(:,end+1) = fly.time;
     HEAD.Pos       	{I.Fly(kk)}{I.WGain(kk),I.HGain(kk)}(:,end+1) = fly.head;
