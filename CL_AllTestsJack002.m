@@ -10,7 +10,7 @@ clear
 %       -
 %
 
- root = 'home';
+ root = '/Volumes/HD_1000GB/JF';
 
 % Select files
 [D,I,N,U,T,FILES,PATH,~] = GetFileData(root,[],false,'Fly','Trial','HGain','WGain');
@@ -21,7 +21,7 @@ end
 if ~iscell(U.WGain)
     U.WGain = {U.WGain};
 end
-
+  %%
 % **CREATE VECTOR STRENGTH TABLES** 
 newvars = zeros(size(I,1),4);
 AddTableVars = splitvars((table(zeros(size(I,1),8))));
@@ -55,28 +55,30 @@ for kk = 1:N.file % all trials
     load(filename,'FlyState','AI','rawTime','VidTime') % load in fly kinematics & arena voltages
     if exist('VidTime','var')==1
         vrange = 5;
-        center = 93;
+        center =89;
         fly.time = VidTime;
     elseif exist('rawTime','var')==1
-        center = 45;
+        center = 41;
         vrange = 10;
-        fly.time = rawTime;
-        
-            plot(rad2deg(FlyState.Left))
-    
+        fly.time = rawTime;    
     end
 	pat.time    	= AI.Time;
- 	pat.xpos     	= deg2rad(3.75*(round((AI{:,2})*(96/vrange))));
-    % pat.xpos     	= 3.75*(pat.xpos - center);  %don't need as of now
+    
+ 	pat.xpos     	= (round((AI{:,2})*(96/vrange)));
+    pat.xpos     	= pat.xpos - center;   
+    
+%     pat.xpos(pat.xpos<0) = pat.xpos(pat.xpos<(center/2)) + (96); %look at this!!!!
+    pat.xpos = deg2rad(3.75*pat.xpos);
     
     fly.Ts       	= mean(diff(fly.time));
     fly.Fs          = 1/fly.Ts; 
     [fly.b,fly.a]  	= butter(2,fly.Fc/(fly.Fs/2),'low');
     fly.head     	= deg2rad(filtfilt(fly.b,fly.a,FlyState{:,2}));
-    fly.lwing      	= FlyState{:,3};
-    fly.rwing     	= FlyState{:,4};
+    fly.lwing      	= hampel(1:length(FlyState{:,3}),FlyState{:,3});
+    fly.rwing     	= hampel(1:length(FlyState{:,4}),FlyState{:,4});
+    fly.lwing       = hampel(1:length(fly.lwing),fly.lwing);
+    fly.rwing     	= hampel(1:length(fly.rwing),fly.rwing);
     fly.wba       	= fly.lwing - fly.rwing;
-    fly.wba         = hampel(1:length(fly.wba),fly.wba);
     fly.wba         = deg2rad(filtfilt(fly.b,fly.a,fly.wba));
     
     fly.time      	= fly.time 	(span);
@@ -99,11 +101,17 @@ for kk = 1:N.file % all trials
     HEAD.All.Pos  	{I.WGain(kk),I.HGain(kk)}(:,end+1) = fly.head;
     WING.All.Pos  	{I.WGain(kk),I.HGain(kk)}(:,end+1) = fly.wba;
     PAT.All.XPos  	{I.WGain(kk),I.HGain(kk)}(:,end+1) = pat.xpos;
-
-% **UNCOMMENT TO PLOT ONE TRIAL AT A TIME**    
+   
+    
+    
+%**UNCOMMENT TO PLOT ONE TRIAL AT A TIME** 
+%     clf
+%     cla
 %     hold on
-%     plot(rad2deg(FlyState.Right))
-%     disp(FILES{kk})
+% %     plot(rad2deg(FlySt ate{:,4}))
+% %     plot((FlyState{:,3}),'b')
+%     plot(fly.lwing,'r')
+%     disp(FILES{kk})           
 %     pause
 %     cla
 %     clc
@@ -111,8 +119,11 @@ for kk = 1:N.file % all trials
 end
 
 %% Histogram of PATTERN Position ALL FLIES %%
-fig(1) = figure (1) ; clf ; hold on
-set(fig,'Color','w','Name','Histogram of Wing Position','Position',[0 0 N.WGain*300 N.HGain*200])
+fig(1) = figure (1); 
+clf; 
+hold on
+
+set(fig,'Color','w','Name','Histogram of Pattern Position','Position',[0 0 N.WGain*300 N.HGain*200])
 movegui(gcf,'center')
 ax = gobjects(N.HGain,N.WGain);
 vector = 1:96;
@@ -130,7 +141,7 @@ for ww = 1:N.WGain
                 % yticklabels('')  
             end
             if any(pp==(N.WGain*N.HGain-N.WGain+1):(N.WGain*N.HGain))
-                    xlabel(['\Delta WBA(' char(176) ')'],'FontSize',12,'fontweight','bold')
+                    xlabel(['Pattern Position(' char(176) ')'],'FontSize',12,'fontweight','bold')
             else
                 % xticklabels('')
             end
@@ -141,7 +152,7 @@ for ww = 1:N.WGain
         pp = pp + 1;
     end
 end
-set(ax,'XLim',[1 96])
+% set(ax,'XLim',[1 96])
 linkaxes(ax,'xy')
 
 %% Histogram of WING Position ALL FLIES %%
@@ -211,5 +222,6 @@ for ww = 1:N.WGain
 end
 set(ax,'XLim',20*[-1 1])
 linkaxes(ax,'xy')
+
 
 end
